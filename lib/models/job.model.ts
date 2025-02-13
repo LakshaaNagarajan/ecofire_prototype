@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 export interface Jobs extends mongoose.Document {
+  _id: string;
   title: string;
   owner: string;
   businessFunction: string;   

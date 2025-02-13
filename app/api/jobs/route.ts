@@ -1,4 +1,5 @@
 // route: /api/jobs
+// description: Get all jobs
 
 import { NextResponse } from 'next/server';
 import { JobService } from '@/lib/services/job.service';

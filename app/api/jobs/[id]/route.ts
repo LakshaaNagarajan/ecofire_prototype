@@ -1,4 +1,5 @@
 // route: /api/jobs/:id
+// description: Get job by ID
 
 
 import { NextResponse } from 'next/server';

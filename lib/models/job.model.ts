@@ -6,6 +6,8 @@ export interface Jobs extends mongoose.Document {
   owner: string;
   businessFunction: string;   
   tasks: object[];
+  userId: string;
+  dueDate?: Date;
 }
 
 // interface tasks {
@@ -20,23 +22,26 @@ enum level {
 
 /* JobSchema will correspond to a collection in your MongoDB database. */
 const JobSchema = new mongoose.Schema<Jobs>({
+  userId: {
+    type: String,
+    required: [true, "User ID is required"],
+    index: true // Add index for better query performance
+  },
   title: {
-    /* The title of this Job */
-
     type: String,
     required: [true, "Please provide a title for this Job."],
   },
   owner: {
-    /* The owner of this Job */
-
     type: String,
     required: [false, "Please provide the Job owner's name"], // TODO: Change to true once we have an owners feature added to the jobs table
   },
   businessFunction: {
-    /* List of business functions, if applicable */
-
-    type: String,
+    type: String, 
   },
+  dueDate: {
+    type: Date,
+    required: false,
+  }
 
 });
 

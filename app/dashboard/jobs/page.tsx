@@ -1,10 +1,21 @@
-'use client';
+"use client";
+import { useEffect, useState } from "react";
+import { Jobs } from "@/lib/models/job.model";
+import { Job, columns } from "@/components/jobs/table/columns";
+import { DataTable } from "@/components/jobs/table/jobs-table";
 
-import { useEffect, useState } from 'react';
-import { Jobs } from '@/lib/models/job.model';
+function convertJobsToTableData(jobs: Jobs[]): Job[] {
+  return jobs.map(job => ({
+    id: job._id,
+    title: job.title,
+    businessFunction: job.businessFunction || undefined,
+    owner: job.owner || undefined,
+    dueDate: job.dueDate || undefined // Keep as ISO string
+  }));
+}
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Jobs[]>([]);
+  const [data, setData] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,15 +23,17 @@ export default function JobsPage() {
     async function fetchJobs() {
       try {
         const response = await fetch('/api/jobs');
-        const data = await response.json();
+        const result = await response.json();
         
-        if (data.success) {
-          setJobs(data.data);
+        if (result.success) {
+          const tableData = convertJobsToTableData(result.data);
+          setData(tableData);
         } else {
-          setError(data.error);
+          setError(result.error);
         }
       } catch (err) {
         setError('Failed to fetch jobs');
+        console.error('Error fetching jobs:', err);
       } finally {
         setLoading(false);
       }
@@ -29,20 +42,26 @@ export default function JobsPage() {
     fetchJobs();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading jobs...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Jobs List</h1>
-      <div className="grid gap-4">
-        {jobs.map((job) => (
-          <div key={job._id} className="border p-4 rounded-lg">
-            <h2 className="text-xl font-semibold">{job.title}</h2>
-            <p>Owner: {job.owner}</p>
-            <p>Business Function: {job.businessFunction}</p>
-          </div>
-        ))}
+      <div className="container mx-auto py-10">
+        <DataTable columns={columns} data={data} />
       </div>
     </div>
   );

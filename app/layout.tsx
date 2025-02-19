@@ -7,6 +7,7 @@ import {
 } from '@clerk/nextjs'
 import './globals.css'
 import Navbar from '@/components/landing_page/navbar'
+import { Toaster } from "@/components/ui/toaster"
 export default function RootLayout({
   children,
 }: {
@@ -23,7 +24,7 @@ export default function RootLayout({
             <Navbar/>
             {children}
           </SignedIn>
-          
+          <Toaster/>
         </body>
       </html>
     </ClerkProvider>

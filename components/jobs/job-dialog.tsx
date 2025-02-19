@@ -1,3 +1,4 @@
+// components/jobs/job-dialog.tsx
 
 import { Button } from "@/components/ui/button"
 import {
@@ -5,13 +6,24 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from "react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useState, useEffect } from "react"
 import { Job } from "./table/columns"
+
+interface BusinessFunction {
+  id: string;
+  name: string;
+}
 
 interface JobDialogProps {
   mode: 'create' | 'edit';
@@ -36,6 +48,30 @@ export function JobDialog({
       dueDate: ''
     }
   );
+  const [businessFunctions, setBusinessFunctions] = useState<BusinessFunction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBusinessFunctions() {
+      try {
+        const response = await fetch('/api/business-functions');
+        const result = await response.json();
+        
+        if (result.success) {
+          setBusinessFunctions(result.data.map((bf: any) => ({
+            id: bf._id,
+            name: bf.name
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching business functions:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchBusinessFunctions();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,12 +115,26 @@ export function JobDialog({
               <Label htmlFor="businessFunction" className="text-right">
                 Business Function
               </Label>
-              <Input
-                id="businessFunction"
-                value={formData.businessFunction}
-                onChange={(e) => setFormData({...formData, businessFunction: e.target.value})}
-                className="col-span-3"
-              />
+              <div className="col-span-3">
+                <Select
+                  disabled={loading}
+                  value={formData.businessFunction}
+                  onValueChange={(value) => 
+                    setFormData({...formData, businessFunction: value})
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a business function" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {businessFunctions.map((bf) => (
+                      <SelectItem key={bf.id} value={bf.name}>
+                        {bf.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="dueDate" className="text-right">

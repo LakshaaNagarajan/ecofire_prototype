@@ -149,7 +149,7 @@ export default function JobsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center">
         <div className="text-lg">Loading jobs...</div>
       </div>
     );
@@ -157,7 +157,7 @@ export default function JobsPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center">
         <div className="text-lg text-red-500">Error: {error}</div>
       </div>
     );

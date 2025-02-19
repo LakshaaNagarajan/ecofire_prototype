@@ -31,6 +31,11 @@ const items = [
     icon: Calendar,
   },
   {
+    title: "Business Functions",
+    url: "/dashboard/business-functions",
+    icon: Search,
+  },
+  {
     title: "Backstage",
     url: "#",
     icon: Search,

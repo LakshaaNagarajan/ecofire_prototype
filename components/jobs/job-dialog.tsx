@@ -40,44 +40,36 @@ export function JobDialog({
   onSubmit, 
   initialData 
 }: JobDialogProps) {
-  const [formData, setFormData] = useState<Partial<Job>>(
-    initialData || {
+  const [formData, setFormData] = useState<Partial<Job>>(() => {
+    if (initialData) {
+      return {
+        ...initialData,
+        dueDate: initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : ''
+      };
+    }
+    return {
       title: '',
       owner: '',
       businessFunction: '',
       dueDate: ''
-    }
-  );
-  const [businessFunctions, setBusinessFunctions] = useState<BusinessFunction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchBusinessFunctions() {
-      try {
-        const response = await fetch('/api/business-functions');
-        const result = await response.json();
-        
-        if (result.success) {
-          setBusinessFunctions(result.data.map((bf: any) => ({
-            id: bf._id,
-            name: bf.name
-          })));
-        }
-      } catch (error) {
-        console.error('Error fetching business functions:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchBusinessFunctions();
-  }, []);
+    };
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const submissionData = { ...formData };
+    
+    if (submissionData.dueDate) {
+      // Add time to the date to ensure consistent timezone handling
+      submissionData.dueDate = `${submissionData.dueDate}T00:00:00.000Z`;
+    }
+    
+    onSubmit(submissionData);
     onOpenChange(false);
   };
+
+  const [businessFunctions, setBusinessFunctions] = useState<BusinessFunction[]>([]);
+  const [loading, setLoading] = useState(true);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,7 +135,7 @@ export function JobDialog({
               <Input
                 id="dueDate"
                 type="date"
-                value={formData.dueDate ? new Date(formData.dueDate).toISOString().split('T')[0] : ''}
+                value={formData.dueDate || ''}
                 onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
                 className="col-span-3"
               />

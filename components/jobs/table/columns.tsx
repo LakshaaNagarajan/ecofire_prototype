@@ -48,7 +48,15 @@ export const columns = (
       const dueDate = row.getValue("dueDate") as string | undefined;
       if (!dueDate) return "No due date";
       
-      return new Date(dueDate).toLocaleDateString('en-US', {
+      // Parse the date and format it
+      const date = new Date(dueDate);
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
+      const day = date.getUTCDate();
+      
+      const displayDate = new Date(year, month, day);
+      
+      return displayDate.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'

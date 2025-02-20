@@ -54,6 +54,34 @@ export function JobDialog({
       dueDate: ''
     };
   });
+  useEffect(() => {
+    async function fetchBusinessFunctions() {
+      try {
+        const response = await fetch('/api/business-functions');
+        if (!response.ok) {
+          throw new Error('Failed to fetch business functions');
+        }
+        const result = await response.json();
+        
+        if (result.success) {
+          setBusinessFunctions(result.data.map((bf: any) => ({
+            id: bf._id,
+            name: bf.name
+          })));
+        } else {
+          throw new Error(result.error || 'Failed to fetch business functions');
+        }
+      } catch (error) {
+        console.error('Error fetching business functions:', error);
+        // Set an empty array if there's an error
+        setBusinessFunctions([]);
+      }
+      // Always set loading to false, regardless of success or failure
+      setLoading(false);
+    }
+
+    fetchBusinessFunctions();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

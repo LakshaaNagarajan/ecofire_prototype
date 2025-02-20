@@ -13,7 +13,7 @@ import { UserButton } from "@clerk/nextjs";
 
 const Navbar = () => {
   return (
-    <Card className="w-full bg-card py-3 px-4 border-0 flex items-center justify-between rounded-2xl mt-5">
+    <Card className="w-auto bg-card py-3 px-4 border-0 flex items-center justify-between rounded-2xl mt-5 mx-64">
       <Link href="/">
         <span className="text-2xl font-bold text-primary">EcoF:re </span>
       </Link>

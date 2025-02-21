@@ -16,6 +16,7 @@ function convertJobsToTableData(jobs: Jobs[]): Job[] {
     businessFunction: job.businessFunction || undefined,
     owner: job.owner || undefined,
     dueDate: job.dueDate ? new Date(job.dueDate).toISOString() : undefined,
+    isDone: job.isDone || false,
   }));
 }
 
@@ -25,8 +26,62 @@ export default function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | undefined>(undefined);
+  const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
+  // Function to handle job selection
+  const handleSelect = (jobId: string, checked: boolean) => {
+    setSelectedJobs(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(jobId);
+      } else {
+        newSet.delete(jobId);
+      }
+      return newSet;
+    });
+  };
+
+  // Function to mark selected jobs as done
+  const handleMarkAsDone = async () => {
+    try {
+      const jobIds = Array.from(selectedJobs);
+      
+      // Make API call to update all selected jobs
+      const promises = jobIds.map(id => 
+        fetch(`/api/jobs/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isDone: true }),
+        })
+      );
+
+      await Promise.all(promises);
+
+      // Update local state immediately
+      setData(prevData => prevData.filter(job => !selectedJobs.has(job.id)));
+      
+      // Clear selection
+      setSelectedJobs(new Set());
+
+      toast({
+        title: "Success",
+        description: "Selected jobs marked as complete",
+      });
+
+      // Refresh the jobs list from server
+      await fetchJobs();
+    } catch (error) {
+      console.error('Error marking jobs as done:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update jobs",
+        variant: "destructive",
+      });
+    }
+  };
   const fetchJobs = async () => {
     try {
       const response = await fetch("/api/jobs");
@@ -34,7 +89,8 @@ export default function JobsPage() {
 
       if (result.success) {
         const tableData = convertJobsToTableData(result.data);
-        setData(tableData);
+        // Filter out done jobs
+        setData(tableData.filter(job => !job.isDone));
       } else {
         setError(result.error);
       }
@@ -175,7 +231,7 @@ export default function JobsPage() {
         </div>
 
         <DataTable
-          columns={columns(handleOpenEdit, handleDelete)}
+          columns={columns(handleOpenEdit, handleDelete, handleSelect)}
           data={data}
         />
 
@@ -186,6 +242,26 @@ export default function JobsPage() {
           onSubmit={editingJob ? handleEdit : handleCreate}
           initialData={editingJob}
         />
+        {selectedJobs.size > 0 && (
+        <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-lg border shadow-lg">
+          <span className="text-sm font-medium">
+            {selectedJobs.size} {selectedJobs.size === 1 ? 'job' : 'jobs'} selected
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSelectedJobs(new Set())}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleMarkAsDone}
+          >
+            Mark as Done
+          </Button>
+        </div>
+      )}
       </div>
     </div>
   );

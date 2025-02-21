@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,12 +21,36 @@ export type Job = {
   businessFunction?: string;
   owner?: string;
   dueDate?: string;
+  isDone: boolean;
 };
 
 export const columns = (
   onEdit: (job: Job) => void,
-  onDelete: (id: string) => void
+  onDelete: (id: string) => void,
+  onSelect: (jobId: string, checked: boolean) => void
 ): ColumnDef<Job>[] => [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => {
+          row.toggleSelected(!!value);
+          onSelect(row.original.id, !!value);
+        }}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "title",
     header: "Title",

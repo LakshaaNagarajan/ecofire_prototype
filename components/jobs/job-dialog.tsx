@@ -39,7 +39,8 @@ const emptyFormState = {
   notes: '',
   owner: '',
   businessFunction: '',
-  dueDate: ''
+  dueDate: '',
+  isDone: false,
 }
 
 export function JobDialog({

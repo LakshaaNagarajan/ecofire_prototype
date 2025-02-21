@@ -31,11 +31,11 @@ ECOFIRE_PROTOTYPE/
 ├── app/
 │   ├── api/                    # API routes
 │   ├── dashboard/              # Dashboard pages
-│   ├── components/             # Shared components
-│   │   ├── business-funtions/  # Business function components
-│   │   ├── dashboard/         # Dashboard components
-│   │   ├── jobs/             # Job management components
-│   │   └── ui/               # UI components (shadcn)
+├──components/                  # Shared components
+│   ├── business-funtions/      # Business function components
+│   ├── dashboard/              # Dashboard components
+│   ├── jobs/                   # Job management components
+│   └── ui/                    # UI components (shadcn)
 ├── hooks/                    # Custom React hooks
 ├── lib/                     # Utility functions and services
 │   ├── models/             # MongoDB models

@@ -3,9 +3,9 @@ import mongoose from "mongoose";
 export interface Jobs extends mongoose.Document {
   _id: string;
   title: string;
+  notes: string;
   owner: string;
   businessFunction: string;   
-  tasks: object[];
   userId: string;
   dueDate?: Date;
 }
@@ -30,6 +30,10 @@ const JobSchema = new mongoose.Schema<Jobs>({
   title: {
     type: String,
     required: [true, "Please provide a title for this Job."],
+  },
+  notes: {
+    type: String,
+    required: false,
   },
   owner: {
     type: String,

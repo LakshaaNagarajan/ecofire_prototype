@@ -9,12 +9,13 @@ import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function convertJobsToTableData(jobs: Jobs[]): Job[] {
-  return jobs.map(job => ({
+  return jobs.map((job) => ({
     id: job._id,
     title: job.title,
+    notes: job.notes || undefined,
     businessFunction: job.businessFunction || undefined,
     owner: job.owner || undefined,
-    dueDate: job.dueDate || undefined
+    dueDate: job.dueDate ? new Date(job.dueDate).toISOString() : undefined,
   }));
 }
 
@@ -28,9 +29,9 @@ export default function JobsPage() {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/jobs');
+      const response = await fetch("/api/jobs");
       const result = await response.json();
-      
+
       if (result.success) {
         const tableData = convertJobsToTableData(result.data);
         setData(tableData);
@@ -38,8 +39,8 @@ export default function JobsPage() {
         setError(result.error);
       }
     } catch (err) {
-      setError('Failed to fetch jobs');
-      console.error('Error fetching jobs:', err);
+      setError("Failed to fetch jobs");
+      console.error("Error fetching jobs:", err);
     } finally {
       setLoading(false);
     }
@@ -51,10 +52,10 @@ export default function JobsPage() {
 
   const handleCreate = async (jobData: Partial<Job>) => {
     try {
-      const response = await fetch('/api/jobs', {
-        method: 'POST',
+      const response = await fetch("/api/jobs", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(jobData),
       });
@@ -84,9 +85,9 @@ export default function JobsPage() {
 
     try {
       const response = await fetch(`/api/jobs/${editingJob.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(jobData),
       });
@@ -114,7 +115,7 @@ export default function JobsPage() {
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch(`/api/jobs/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       const result = await response.json();
@@ -172,14 +173,14 @@ export default function JobsPage() {
             <Plus className="mr-2 h-4 w-4" /> Create Job
           </Button>
         </div>
-        
-        <DataTable 
-          columns={columns(handleOpenEdit, handleDelete)} 
-          data={data} 
+
+        <DataTable
+          columns={columns(handleOpenEdit, handleDelete)}
+          data={data}
         />
 
         <JobDialog
-          mode={editingJob ? 'edit' : 'create'}
+          mode={editingJob ? "edit" : "create"}
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           onSubmit={editingJob ? handleEdit : handleCreate}

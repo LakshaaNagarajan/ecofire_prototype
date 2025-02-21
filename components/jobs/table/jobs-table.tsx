@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Define the Job type
 export type Job = {
@@ -24,6 +24,7 @@ export type Job = {
   businessFunction?: string;
   owner?: string;
   dueDate?: string;
+  isDone: boolean;
 };
 
 interface DataTableProps<TData, TValue> {
@@ -36,6 +37,11 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = useState({});
+
+  // Clear selection when data changes
+  useEffect(() => {
+    setRowSelection({});
+  }, [data]);
 
   const table = useReactTable({
     data,

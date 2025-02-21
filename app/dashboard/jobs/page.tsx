@@ -7,6 +7,7 @@ import { JobDialog } from "@/components/jobs/job-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { completedColumns } from "@/components/jobs/table/completedColumns";
 
 function convertJobsToTableData(jobs: Jobs[]): Job[] {
   return jobs.map((job) => ({
@@ -21,7 +22,8 @@ function convertJobsToTableData(jobs: Jobs[]): Job[] {
 }
 
 export default function JobsPage() {
-  const [data, setData] = useState<Job[]>([]);
+  const [activeJobs, setActiveJobs] = useState<Job[]>([]);
+  const [completedJobs, setCompletedJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,7 +33,7 @@ export default function JobsPage() {
 
   // Function to handle job selection
   const handleSelect = (jobId: string, checked: boolean) => {
-    setSelectedJobs(prev => {
+    setSelectedJobs((prev) => {
       const newSet = new Set(prev);
       if (checked) {
         newSet.add(jobId);
@@ -46,13 +48,13 @@ export default function JobsPage() {
   const handleMarkAsDone = async () => {
     try {
       const jobIds = Array.from(selectedJobs);
-      
+
       // Make API call to update all selected jobs
-      const promises = jobIds.map(id => 
+      const promises = jobIds.map((id) =>
         fetch(`/api/jobs/${id}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ isDone: true }),
         })
@@ -60,9 +62,13 @@ export default function JobsPage() {
 
       await Promise.all(promises);
 
-      // Update local state immediately
-      setData(prevData => prevData.filter(job => !selectedJobs.has(job.id)));
-      
+      // Move selected jobs from active to completed
+      const jobsToMove = activeJobs.filter((job) => selectedJobs.has(job.id));
+      const updatedJobs = jobsToMove.map((job) => ({ ...job, isDone: true }));
+
+      setActiveJobs((prev) => prev.filter((job) => !selectedJobs.has(job.id)));
+      setCompletedJobs((prev) => [...prev, ...updatedJobs]);
+
       // Clear selection
       setSelectedJobs(new Set());
 
@@ -70,11 +76,8 @@ export default function JobsPage() {
         title: "Success",
         description: "Selected jobs marked as complete",
       });
-
-      // Refresh the jobs list from server
-      await fetchJobs();
     } catch (error) {
-      console.error('Error marking jobs as done:', error);
+      console.error("Error marking jobs as done:", error);
       toast({
         title: "Error",
         description: "Failed to update jobs",
@@ -82,15 +85,17 @@ export default function JobsPage() {
       });
     }
   };
+
   const fetchJobs = async () => {
     try {
       const response = await fetch("/api/jobs");
       const result = await response.json();
 
       if (result.success) {
-        const tableData = convertJobsToTableData(result.data);
-        // Filter out done jobs
-        setData(tableData.filter(job => !job.isDone));
+        const allJobs = convertJobsToTableData(result.data);
+        // Separate active and completed jobs
+        setActiveJobs(allJobs.filter((job) => !job.isDone));
+        setCompletedJobs(allJobs.filter((job) => job.isDone));
       } else {
         setError(result.error);
       }
@@ -232,7 +237,15 @@ export default function JobsPage() {
 
         <DataTable
           columns={columns(handleOpenEdit, handleDelete, handleSelect)}
-          data={data}
+          data={activeJobs}
+        />
+        <div className="mt-16 mb-6">
+          <h2 className="text-2xl font-bold">Completed Jobs</h2>
+        </div>
+
+        <DataTable
+          columns={completedColumns(handleDelete)}
+          data={completedJobs}
         />
 
         <JobDialog
@@ -243,25 +256,23 @@ export default function JobsPage() {
           initialData={editingJob}
         />
         {selectedJobs.size > 0 && (
-        <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-lg border shadow-lg">
-          <span className="text-sm font-medium">
-            {selectedJobs.size} {selectedJobs.size === 1 ? 'job' : 'jobs'} selected
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setSelectedJobs(new Set())}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleMarkAsDone}
-          >
-            Mark as Done
-          </Button>
-        </div>
-      )}
+          <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-lg border shadow-lg">
+            <span className="text-sm font-medium">
+              {selectedJobs.size} {selectedJobs.size === 1 ? "job" : "jobs"}{" "}
+              selected
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedJobs(new Set())}
+            >
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleMarkAsDone}>
+              Mark as Done
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

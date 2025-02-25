@@ -18,7 +18,8 @@ export type Job = {
   id: string;
   title: string;
   notes?: string;
-  businessFunction?: string;
+  businessFunctionId?: string;
+  businessFunctionName?: string;
   owner?: string;
   dueDate?: string;
   isDone: boolean;
@@ -74,13 +75,13 @@ export const columns = (
     header: "Owner",
   },
   {
-    accessorKey: "businessFunction",
+    accessorKey: "businessFunctionName",
     header: "Business Function",
     cell: ({ row }) => {
-      const businessFunction = row.getValue("businessFunction") as
+      const businessFunctionName = row.getValue("businessFunctionName") as
         | string
         | undefined;
-      return businessFunction || "Not specified";
+      return businessFunctionName || "Not specified";
     },
   },
   {

@@ -5,7 +5,7 @@ export interface Jobs extends mongoose.Document {
   title: string;
   notes: string;
   owner: string;
-  businessFunction: string;   
+  businessFunctionId: string;   
   userId: string;
   dueDate?: Date;
   isDone: boolean;
@@ -40,8 +40,9 @@ const JobSchema = new mongoose.Schema<Jobs>({
     type: String,
     required: [false, "Please provide the Job owner's name"], // TODO: Change to true once we have an owners feature added to the jobs table
   },
-  businessFunction: {
+  businessFunctionId: {
     type: String, 
+    required: false,
   },
   dueDate: {
     type: Date,

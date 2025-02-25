@@ -35,13 +35,13 @@ interface JobDialogProps {
 }
 
 const emptyFormState = {
-  title: '',
-  notes: '',
-  owner: '',
-  businessFunction: '',
-  dueDate: '',
+  title: "",
+  notes: "",
+  owner: "",
+  businessFunctionId: 'none',
+  dueDate: "",
   isDone: false,
-}
+};
 
 export function JobDialog({
   mode,
@@ -68,18 +68,20 @@ export function JobDialog({
   });
 
   useEffect(() => {
-    if (mode === 'create') {
+    if (mode === "create") {
       setFormData(emptyFormState);
     } else if (initialData) {
       setFormData({
-        title: initialData.title || '',
-        notes: initialData.notes || '',
-        owner: initialData.owner || '',
-        businessFunction: initialData.businessFunction || '',
-        dueDate: initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : ''
+        title: initialData.title || "",
+        notes: initialData.notes || "",
+        owner: initialData.owner || "",
+        businessFunctionId: initialData.businessFunctionId || "",
+        dueDate: initialData.dueDate
+          ? new Date(initialData.dueDate).toISOString().split("T")[0]
+          : "",
       });
     }
-  }, [mode, initialData]);
+  }, [mode, initialData, open]);
 
   useEffect(() => {
     async function fetchBusinessFunctions() {
@@ -123,7 +125,7 @@ export function JobDialog({
 
     onSubmit(submissionData);
     onOpenChange(false);
-    if (mode === 'create') {
+    if (mode === "create") {
       setFormData(emptyFormState);
     }
   };
@@ -190,17 +192,21 @@ export function JobDialog({
               <div className="col-span-3">
                 <Select
                   disabled={loading}
-                  value={formData.businessFunction}
+                  value={formData.businessFunctionId || "none"}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, businessFunction: value })
+                    setFormData({
+                      ...formData,
+                      businessFunctionId: value === "none" ? undefined : value,
+                    })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a business function" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
                     {businessFunctions.map((bf) => (
-                      <SelectItem key={bf.id} value={bf.name}>
+                      <SelectItem key={bf.id} value={bf.id}>
                         {bf.name}
                       </SelectItem>
                     ))}
@@ -215,7 +221,11 @@ export function JobDialog({
               <Input
                 id="dueDate"
                 type="date"
-                value={formData.dueDate || ""}
+                value={
+                  formData.dueDate
+                    ? new Date(formData.dueDate).toISOString().split("T")[0]
+                    : ""
+                }
                 onChange={(e) =>
                   setFormData({ ...formData, dueDate: e.target.value })
                 }

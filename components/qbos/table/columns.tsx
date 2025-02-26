@@ -88,7 +88,7 @@ export const columns = (
   },
   {
     accessorKey: "deadline",
-    header: "Deadline ↑",
+    header: "Deadline",
     cell: ({ row }) => {
       const deadline = row.getValue("deadline") as string;
       if (!deadline) return "No deadline";
@@ -104,7 +104,7 @@ export const columns = (
   },
   {
     accessorKey: "points",
-    header: "QBO points ↓",
+    header: "QBO points",
     cell: ({ row }) => {
       const points = row.getValue("points") as number;
       return points.toString();

@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -13,31 +13,46 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import { useEffect, useState } from "react";
 
 // Define the Job type
 export type Job = {
-  id: string
-  title: string
-  businessFunction: number
-  dueDate?: Date
-}
+  id: string;
+  title: string;
+  notes?: string;
+  businessFunction?: string;
+  owner?: string;
+  dueDate?: string;
+  isDone: boolean;
+};
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const [rowSelection, setRowSelection] = useState({});
+
+  // Clear selection when data changes
+  useEffect(() => {
+    setRowSelection({});
+  }, [data]);
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-  })
-
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      rowSelection,
+    },
+  });
   return (
     <div className="rounded-md border">
       <Table>
@@ -54,7 +69,7 @@ export function DataTable<TData, TValue>({
                           header.getContext()
                         )}
                   </TableHead>
-                )
+                );
               })}
             </TableRow>
           ))}
@@ -67,8 +82,13 @@ export function DataTable<TData, TValue>({
                 data-state={row.getIsSelected() && "selected"}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  <TableCell key={cell.id} className="overflow-hidden">
+                    <div className="overflow-hidden">
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </div>
                   </TableCell>
                 ))}
               </TableRow>
@@ -83,5 +103,5 @@ export function DataTable<TData, TValue>({
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

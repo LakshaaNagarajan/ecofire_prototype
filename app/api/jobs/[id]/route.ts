@@ -1,15 +1,16 @@
 // route: /api/jobs/:id
 // description: Get job by id
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { JobService } from '@/lib/services/job.service';
 import { auth } from '@clerk/nextjs/server';
 
 const jobService = new JobService();
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { id } = await context.params;
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -21,8 +22,8 @@ export async function GET(
         { status: 401 }
       );
     }
-    const job = await jobService.getJobById(params.id, userId);
-  
+    const job = await jobService.getJobById(id, userId);
+ 
     if (!job) {
       return NextResponse.json(
         {
@@ -37,7 +38,7 @@ export async function GET(
       data: job
     });
   } catch (error) {
-    console.error(`Error in GET /api/jobs/${params.id}:`, error);
+    console.error(`Error in GET /api/jobs/${id}:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -49,9 +50,10 @@ export async function GET(
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { id } = await context.params;
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -63,10 +65,8 @@ export async function PUT(
         { status: 401 }
       );
     }
-
     const updateData = await request.json();
-    const updatedJob = await jobService.updateJob(params.id, userId, updateData);
-
+    const updatedJob = await jobService.updateJob(id, userId, updateData);
     if (!updatedJob) {
       return NextResponse.json(
         {
@@ -76,13 +76,12 @@ export async function PUT(
         { status: 404 }
       );
     }
-
     return NextResponse.json({
       success: true,
       data: updatedJob
     });
   } catch (error) {
-    console.error(`Error in PUT /api/jobs/${params.id}:`, error);
+    console.error(`Error in PUT /api/jobs/${id}:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -94,9 +93,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
+  const { id } = await context.params;
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -108,9 +108,7 @@ export async function DELETE(
         { status: 401 }
       );
     }
-
-    const deleted = await jobService.deleteJob(params.id, userId);
-
+    const deleted = await jobService.deleteJob(id, userId);
     if (!deleted) {
       return NextResponse.json(
         {
@@ -120,13 +118,12 @@ export async function DELETE(
         { status: 404 }
       );
     }
-
     return NextResponse.json({
       success: true,
       message: 'Job deleted successfully'
     });
   } catch (error) {
-    console.error(`Error in DELETE /api/jobs/${params.id}:`, error);
+    console.error(`Error in DELETE /api/jobs/${id}:`, error);
     return NextResponse.json(
       {
         success: false,

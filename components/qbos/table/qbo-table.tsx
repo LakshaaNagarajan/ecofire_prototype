@@ -42,6 +42,23 @@ export function QBOTable<TData, TValue>({
     onSortingChange: setSorting,
   });
 
+  // Calculate total points
+  const totalPoints = data.reduce((sum, item: any) => sum + (item.points || 0), 0);
+  
+  // Calculate average progress
+  const averageProgress = data.length > 0 
+    ? (data.reduce((sum, item: any) => {
+        const beginValue = item.beginningValue || 0;
+        const currentValue = item.currentValue || 0;
+        const targetValue = item.targetValue || 1;
+        let progress = 0;
+        if (targetValue !== beginValue) {
+          progress = ((currentValue - beginValue) / (targetValue - beginValue)) * 100;
+        }
+        return sum + progress;
+      }, 0) / data.length).toFixed(2) + '%'
+    : '0%';
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -88,45 +105,37 @@ export function QBOTable<TData, TValue>({
               </TableCell>
             </TableRow>
           )}
+          
+          {/* Summary row with properly aligned columns */}
+          <TableRow className="bg-gray-50">
+            {/* First 6 cells empty (name, unit, beginning, current, target, deadline) */}
+            <TableCell colSpan={6} className="text-right font-medium">
+              SUM
+            </TableCell>
+            
+            {/* Points sum */}
+            <TableCell className="font-medium">
+              {totalPoints}
+            </TableCell>
+            
+            {/* Notes - empty */}
+            <TableCell></TableCell>
+            
+            {/* Current progress average */}
+            <TableCell className="font-medium">
+              {averageProgress}
+            </TableCell>
+            
+            {/* Expected progress average */}
+            <TableCell className="font-medium">
+              0.00%
+            </TableCell>
+            
+            {/* Actions column - empty */}
+            <TableCell></TableCell>
+          </TableRow>
         </TableBody>
       </Table>
-      <div className="flex items-center justify-end p-2">
-        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <div className="flex-1">
-            <span className="font-medium">SUM</span>
-          </div>
-          <div className="flex items-center">
-            {/* Calculate sum of points */}
-            <span className="font-medium">
-              {data.reduce((sum, item: any) => sum + (item.points || 0), 0)}
-            </span>
-          </div>
-          <div className="flex-1">
-            <span className="font-medium">AVERAGE</span>
-          </div>
-          <div className="flex items-center">
-            {/* Calculate average progress */}
-            <span className="font-medium">
-              {data.length > 0 
-                ? (data.reduce((sum, item: any) => {
-                    const beginValue = item.beginningValue || 0;
-                    const currentValue = item.currentValue || 0;
-                    const targetValue = item.targetValue || 1;
-                    let progress = 0;
-                    if (targetValue !== beginValue) {
-                      progress = ((currentValue - beginValue) / (targetValue - beginValue)) * 100;
-                    }
-                    return sum + progress;
-                  }, 0) / data.length).toFixed(2) + '%'
-                : '0%'
-              }
-            </span>
-          </div>
-          <div className="flex-1">
-            <span className="font-medium">AVERAGE</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

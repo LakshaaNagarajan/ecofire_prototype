@@ -33,7 +33,8 @@ export function QBODialog({
     if (initialData) {
       return {
         ...initialData,
-        deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : ''
+        // Format deadline for date input (YYYY-MM-DD) ensuring no timezone issues
+        deadline: initialData.deadline ? formatDateForInput(initialData.deadline) : ''
       };
     }
     return {
@@ -48,12 +49,23 @@ export function QBODialog({
     };
   });
 
+  // Helper function to format date string for input element
+  function formatDateForInput(dateString: string): string {
+    // Create date at noon to avoid timezone issues
+    const date = new Date(dateString);
+    // Ensure it's using local timezone and correct UTC date
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   // Reset the form when the dialog opens or the initialData changes
   useEffect(() => {
     if (initialData) {
       setFormData({
         ...initialData,
-        deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : ''
+        deadline: initialData.deadline ? formatDateForInput(initialData.deadline) : ''
       });
     } else {
       setFormData({
@@ -75,13 +87,17 @@ export function QBODialog({
     // Create a copy of the form data for submission
     const submissionData = { ...formData };
     
-    // Format the deadline for API submission
+    // Format the deadline for API submission, ensuring it's a fixed UTC time
     if (submissionData.deadline) {
-      submissionData.deadline = `${submissionData.deadline}T00:00:00.000Z`;
+      // Set noon UTC time to avoid date shifting due to timezone conversion
+      const [year, month, day] = submissionData.deadline.split('-').map(Number);
+      const dateObj = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+      submissionData.deadline = dateObj.toISOString();
     }
     
     // Submit the data to the parent component
     onSubmit(submissionData);
+    onOpenChange(false);
   };
 
   const handleNumberChange = (field: keyof QBO, value: string) => {

@@ -1,4 +1,4 @@
-// components/qbos/table/columns.tsx
+// components/qbos/table/columns.tsx - Date display update
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -93,12 +93,14 @@ export const columns = (
       const deadline = row.getValue("deadline") as string;
       if (!deadline) return "No deadline";
       
-      // Parse the date and format it
+      // Parse the date and format it in MM/DD/YYYY format
+      // Using noon UTC time to avoid timezone shifting issues
       const date = new Date(deadline);
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC' // Important: ensure date is interpreted in UTC
       });
     }
   },

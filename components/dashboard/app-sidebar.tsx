@@ -56,12 +56,12 @@ const backstageItems = [
   },
   {
     title: "QO Board",
-    url: "/dashboard/backstage/qo-board",
+    url: "/dashboard/backstage/qos",
     icon: Clipboard,
   },
   {
     title: "PI Board",
-    url: "/dashboard/backstage/pi-board",
+    url: "/dashboard/backstage/pis",
     icon: BarChart2,
   },
 ]

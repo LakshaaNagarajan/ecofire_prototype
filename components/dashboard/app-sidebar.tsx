@@ -56,12 +56,12 @@ const backstageItems = [
   },
   {
     title: "QO Board",
-    url: "/dashboard/backstage/qos",
+    url: "/dashboard/backstage/qo-board",
     icon: Clipboard,
   },
   {
     title: "PI Board",
-    url: "/dashboard/backstage/pis",
+    url: "/dashboard/backstage/pi-board",
     icon: BarChart2,
   },
 ]
@@ -87,31 +87,27 @@ export function AppSidebar() {
               
               {/* Backstage Collapsible Group */}
               <Collapsible defaultOpen className="group/collapsible">
-                <SidebarGroup>
-                  <SidebarGroupLabel asChild>
-                    <CollapsibleTrigger className="flex items-center w-full">
-                      <Search className="mr-2 h-4 w-4" />
-                      <span className="text-base text-gray-600">Backstage</span>
-                      <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                    </CollapsibleTrigger>
-                  </SidebarGroupLabel>
-                  <CollapsibleContent>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        {backstageItems.map((item) => (
-                          <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton size={"lg"} asChild>
-                              <Link href={item.url}>
-                                <item.icon />
-                                <span>{item.title}</span>
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </CollapsibleContent>
-                </SidebarGroup>
+                <SidebarMenuItem>
+                  <CollapsibleTrigger className="flex items-center w-full py-2 px-3 text-sm font-medium rounded-md hover:bg-accent">
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>Backstage</span>
+                    <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                  </CollapsibleTrigger>
+                </SidebarMenuItem>
+                <CollapsibleContent>
+                  <SidebarMenu className="pl-6">
+                    {backstageItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton size={"lg"} asChild>
+                          <Link href={item.url}>
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </CollapsibleContent>
               </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -139,4 +135,4 @@ export function AppSidebar() {
       </SidebarFooter>
     </Sidebar>
   )
-}
+}   

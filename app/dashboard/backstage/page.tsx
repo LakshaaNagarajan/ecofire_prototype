@@ -128,8 +128,8 @@ export default function PIsPage() {
     }
   };
 
-  const handleOpenEdit = (PI: PI) => {
-    setEditingPI(PI);
+  const handleOpenEdit = (PIs: PI) => {
+    setEditingPI(PIs);
     setDialogOpen(true);
   };
 

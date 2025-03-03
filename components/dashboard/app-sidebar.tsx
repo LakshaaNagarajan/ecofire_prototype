@@ -37,7 +37,7 @@ const items = [
   },
   {
     title: "Backstage",
-    url: "#",
+    url: "/dashboard/backstage",
     icon: Search,
   },
   {

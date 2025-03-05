@@ -33,10 +33,10 @@ export function PIDialog({
     
     return {
       name: '',
-      improvement: '',
-    
+      unit: '',
+      beginningValue: 0,
       targetValue: 0,
-      
+      deadline: '',
       notes: ''
     };
   });
@@ -46,8 +46,10 @@ export function PIDialog({
      {
       setFormData({
         name: '',
-        improvement: '',        
-        targetValue: 0,        
+        unit: '',   
+        beginningValue: 0,     
+        targetValue: 0,  
+        deadline: '',      
         notes: ''
       });
     }
@@ -95,17 +97,30 @@ export function PIDialog({
             </div>
             
             <div className="grid items-center gap-2">
-              <Label htmlFor="improvement" className="text-left">
+              <Label htmlFor="unit" className="text-left">
                 PI unit
               </Label>
               <Input
-                id="improvement"
-                value={formData.improvement || ''}
-                onChange={(e) => setFormData({...formData, improvement: e.target.value})}
+                id="unit"
+                value={formData.unit || ''}
+                onChange={(e) => setFormData({...formData, unit: e.target.value})}
                 placeholder="Enter value"
               />
             </div>
             
+            <div className="grid items-center gap-2">
+              <Label htmlFor="beginningValue" className="text-left">
+                Beginning value
+              </Label>
+              <Input
+                id="beginningValue"
+                type="number"
+                value={formData.beginningValue}
+                onChange={(e) => handleNumberChange('beginningValue', e.target.value)}
+                placeholder="0"
+              />
+            </div>
+
             <div className="grid items-center gap-2">
               <Label htmlFor="targetValue" className="text-left">
                 PI target <span className="text-red-500">*</span>
@@ -120,7 +135,18 @@ export function PIDialog({
               />
             </div>
             
-            
+            <div className="grid items-center gap-2">
+              <Label htmlFor="deadline" className="text-left">
+                PI Deadline <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={formData.deadline || ''}
+                onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+                required
+              />
+            </div>
            
             <div className="grid items-center gap-2">
               <Label htmlFor="notes" className="text-left">

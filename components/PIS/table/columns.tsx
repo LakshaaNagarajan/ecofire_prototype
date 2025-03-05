@@ -21,8 +21,10 @@ import { PIs } from "@/lib/models/PI.model";
 export type PI = {
   id: string
   name: string;
-  improvement: string;
+  unit: string;
+  beginningValue: number;
   targetValue: number;
+  deadline: string;
   notes?: string;
  
 };
@@ -32,10 +34,16 @@ export function convertPIsToTableData(PIS: PIs[]): PI[] {
   return PIS.map(PIs => ({
     id: PIs._id,
     name: PIs.name,
-    improvement: PIs.improvement || '',
+    unit: PIs.unit || '',
+    beginningValue: PIs.beginningValue || 0,
     targetValue: PIs.targetValue || 0,
     //points: PI.points || 0,
+    deadline: PIs.deadline ? 
+    // Handle both string and Date objects
+    (typeof PIs.deadline === 'string' ? PIs.deadline : PIs.deadline.toISOString()) 
+    : '',
     notes: PIs.notes || ''
+   
   }));
 }
 
@@ -48,8 +56,16 @@ export const columns = (
     header: "PI name",
   },
   {
-    accessorKey: "improvement",
-    header: "PI Improvement",
+    accessorKey: "unit",
+    header: "PI Unit",
+  },
+  {
+    accessorKey: "beginningValue",
+    header: "Beginning value",
+    cell: ({ row }) => {
+      const value = row.getValue("beginningValue") as number;
+      return value.toString();
+    }
   },
   {
     accessorKey: "targetValue",
@@ -57,6 +73,24 @@ export const columns = (
     cell: ({ row }) => {
       const value = row.getValue("targetValue") as number;
       return value.toString();
+    }
+  },
+  {
+    accessorKey: "deadline",
+    header: "Deadline",
+    cell: ({ row }) => {
+      const deadline = row.getValue("deadline") as string;
+      if (!deadline) return "No deadline";
+      
+      // Parse the date and format it in MM/DD/YYYY format
+      // Using noon UTC time to avoid timezone shifting issues
+      const date = new Date(deadline);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC' // Important: ensure date is interpreted in UTC
+      });
     }
   },
   {

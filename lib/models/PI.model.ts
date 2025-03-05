@@ -4,8 +4,10 @@ import mongoose from "mongoose";
 export interface PIs extends mongoose.Document {
   _id: string;
   name: string;
-  improvement: string;
+  unit: string;
+  beginningValue: number;
   targetValue: number;
+  deadline: Date;
   notes?: string;
   userId: string;
 }
@@ -21,13 +23,22 @@ const PIsSchema = new mongoose.Schema<PIs>({
     type: String,
     required: [true, "Please provide a name for this PI."],
   },
-  improvement: {
+  unit: {
     type: String,
     required: false,
+  },
+  beginningValue: {
+    type: Number,
+    required: [true, "Please provide a current value."],
+    default: 0
   },
   targetValue: {
     type: Number,
     required: [true, "Please provide a target value."],
+  },
+  deadline: {
+    type: Date,
+    required: [true, "Please provide a deadline."],
   },
   notes: {
     type: String,

@@ -58,6 +58,7 @@ export default function PIsPage() {
           description: "PI created successfully",
         });
         fetchPIs();
+        setDialogOpen(false);
       } else {
         throw new Error(result.error);
       }
@@ -130,6 +131,7 @@ export default function PIsPage() {
 
   const handleOpenEdit = (PIs: PI) => {
     setEditingPI(PIs);
+    
     setDialogOpen(true);
   };
 

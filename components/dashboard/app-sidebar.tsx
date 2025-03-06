@@ -50,8 +50,8 @@ const items = [
 // Backstage sub-items
 const backstageItems = [
   {
-    title: "PI & QO Mapping",
-    url: "/dashboard/backstage/pi-qo-mapping",
+    title: "PI & QBO Mapping",
+    url: "/dashboard/backstage/pi-qbo-mapping",
     icon: Target,
   },
   {

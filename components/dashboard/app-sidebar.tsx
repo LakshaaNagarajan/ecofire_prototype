@@ -1,5 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, Download, Dog } from "lucide-react"
-
+import { Calendar, Home, Inbox, Search, Settings, Download, Dog, Target, Clipboard, BarChart2, ChevronDown } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
 
 // Menu items.
@@ -36,11 +36,6 @@ const items = [
     icon: Search,
   },
   {
-    title: "Backstage",
-    url: "/dashboard/backstage/PI",
-    icon: Search,
-  },
-  {
     title: "Team",
     url: "#",
     icon: Settings,
@@ -49,6 +44,25 @@ const items = [
     title: "Jija",
     url: "#",
     icon: Dog,
+  },
+]
+
+// Backstage sub-items
+const backstageItems = [
+  {
+    title: "PI & QO Mapping",
+    url: "/dashboard/backstage/pi-qo-mapping",
+    icon: Target,
+  },
+  {
+    title: "QO Board",
+    url: "/dashboard/backstage/qos",
+    icon: Clipboard,
+  },
+  {
+    title: "PI Board",
+    url: "/dashboard/backstage/pis",
+    icon: BarChart2,
   },
 ]
 
@@ -70,29 +84,55 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              
+              {/* Backstage Collapsible Group */}
+              <Collapsible defaultOpen className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger className="flex items-center w-full py-2 px-3 text-sm font-medium rounded-md hover:bg-accent">
+                    <Search className="mr-2 h-4 w-4" />
+                    <span>Backstage</span>
+                    <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                  </CollapsibleTrigger>
+                </SidebarMenuItem>
+                <CollapsibleContent>
+                  <SidebarMenu className="pl-6">
+                    {backstageItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton size={"lg"} asChild>
+                          <Link href={item.url}>
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </CollapsibleContent>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-            <SidebarMenuItem>
-                <SidebarMenuButton size={"lg"} asChild>
-                    <a href="#">
-                    <Settings />
-                    <span>Settings</span>
-                    </a>
-                </SidebarMenuButton>
-                <SidebarMenuButton size={"lg"} asChild>
-                    <a href="#">
-                    <Download />
-                    <span>Business Success Plan
-                    </span>
-                    </a>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size={"lg"} asChild>
+              <a href="#">
+                <Settings />
+                <span>Settings</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton size={"lg"} asChild>
+              <a href="#">
+                <Download />
+                <span>Business Success Plan</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   )
-}
+}   

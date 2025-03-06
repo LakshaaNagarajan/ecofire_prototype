@@ -1,7 +1,7 @@
-import { ColumnDef } from "@tanstack/react-table";
-import { Edit, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+// completedColumns.tsx
+import { ColumnDef } from "@tanstack/react-table"
+import { Edit, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,20 +12,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
+import { Job } from "./columns"
+import { Checkbox } from "@/components/ui/checkbox"
 
-export type Job = {
-  id: string;
-  title: string;
-  notes?: string;
-  businessFunctionId?: string;
-  businessFunctionName?: string;
-  owner?: string;
-  dueDate?: string;
-  isDone: boolean;
-};
-
-export const columns = (
+export const completedColumns = (
   onEdit: (job: Job) => void,
   onDelete: (id: string) => void,
   onSelect: (jobId: string, checked: boolean) => void
@@ -62,27 +53,24 @@ export const columns = (
     cell: ({ row }) => {
       const notes = row.getValue("notes") as string | undefined;
       if (!notes) return "No notes";
-      // Truncate long notes and add ellipsis
       return (
         <div className="max-h-[100px] min-h-[60px] w-[300px] overflow-y-auto rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm break-words whitespace-normal">
           {notes}
         </div>
       );
-    },
+    }
   },
   {
     accessorKey: "owner",
     header: "Owner",
   },
   {
-    accessorKey: "businessFunctionName",
+    accessorKey: "businessFunctionName", 
     header: "Business Function",
     cell: ({ row }) => {
-      const businessFunctionName = row.getValue("businessFunctionName") as
-        | string
-        | undefined;
+      const businessFunctionName = row.getValue("businessFunctionName") as string | undefined;
       return businessFunctionName || "Not specified";
-    },
+    }
   },
   {
     accessorKey: "dueDate",
@@ -90,27 +78,18 @@ export const columns = (
     cell: ({ row }) => {
       const dueDate = row.getValue("dueDate") as string | undefined;
       if (!dueDate) return "No due date";
-
-      // Parse the date and format it
-      const date = new Date(dueDate);
-      const year = date.getUTCFullYear();
-      const month = date.getUTCMonth();
-      const day = date.getUTCDate();
-
-      const displayDate = new Date(year, month, day);
-
-      return displayDate.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+     
+      return new Date(dueDate).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
       });
-    },
+    }
   },
   {
     id: "actions",
     cell: ({ row }) => {
       const job = row.original;
-
       return (
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => onEdit(job)}>
@@ -141,6 +120,6 @@ export const columns = (
           </AlertDialog>
         </div>
       );
-    },
-  },
+    }
+  }
 ];

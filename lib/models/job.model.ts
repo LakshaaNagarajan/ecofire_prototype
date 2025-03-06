@@ -3,11 +3,12 @@ import mongoose from "mongoose";
 export interface Jobs extends mongoose.Document {
   _id: string;
   title: string;
+  notes: string;
   owner: string;
-  businessFunction: string;   
-  tasks: object[];
+  businessFunctionId: string;   
   userId: string;
   dueDate?: Date;
+  isDone: boolean;
 }
 
 // interface tasks {
@@ -31,16 +32,26 @@ const JobSchema = new mongoose.Schema<Jobs>({
     type: String,
     required: [true, "Please provide a title for this Job."],
   },
+  notes: {
+    type: String,
+    required: false,
+  },
   owner: {
     type: String,
     required: [false, "Please provide the Job owner's name"], // TODO: Change to true once we have an owners feature added to the jobs table
   },
-  businessFunction: {
+  businessFunctionId: {
     type: String, 
+    required: false,
   },
   dueDate: {
     type: Date,
     required: false,
+  },
+  isDone: {
+    type: Boolean,
+    default: false,
+    required: true
   }
 
 });

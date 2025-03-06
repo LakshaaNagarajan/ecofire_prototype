@@ -7,6 +7,11 @@ export interface BusinessFunction extends mongoose.Document {
   isDefault?: boolean;
 }
 
+export interface BusinessFunctionForDropdown {
+  id: string;
+  name: string;
+}
+
 const BusinessFunctionSchema = new mongoose.Schema<BusinessFunction>({
   userId: {
     type: String,

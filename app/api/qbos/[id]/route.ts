@@ -1,16 +1,16 @@
-// route: /api/jobs/:id
-// description: Get job by id
-import { NextRequest, NextResponse } from 'next/server';
-import { JobService } from '@/lib/services/job.service';
+// app/api/qbos/[id]/route.ts
+// description: Get, update, delete QBO by id
+
+import { NextResponse } from 'next/server';
+import { QBOService } from '@/lib/services/qbo.service';
 import { auth } from '@clerk/nextjs/server';
 
-const jobService = new JobService();
+const qboService = new QBOService();
 
 export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await context.params;
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -22,23 +22,23 @@ export async function GET(
         { status: 401 }
       );
     }
-    const job = await jobService.getJobById(id, userId);
+    const qbo = await qboService.getQBOById(params.id, userId);
  
-    if (!job) {
+    if (!qbo) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Job not found'
+          error: 'QBO not found'
         },
         { status: 404 }
       );
     }
     return NextResponse.json({
       success: true,
-      data: job
+      data: qbo
     });
   } catch (error) {
-    console.error(`Error in GET /api/jobs/${id}:`, error);
+    console.error(`Error in GET /api/qbos/${params.id}:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -50,10 +50,9 @@ export async function GET(
 }
 
 export async function PUT(
-  request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await context.params;
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -66,22 +65,22 @@ export async function PUT(
       );
     }
     const updateData = await request.json();
-    const updatedJob = await jobService.updateJob(id, userId, updateData);
-    if (!updatedJob) {
+    const updatedQBO = await qboService.updateQBO(params.id, userId, updateData);
+    if (!updatedQBO) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Job not found'
+          error: 'QBO not found'
         },
         { status: 404 }
       );
     }
     return NextResponse.json({
       success: true,
-      data: updatedJob
+      data: updatedQBO
     });
   } catch (error) {
-    console.error(`Error in PUT /api/jobs/${id}:`, error);
+    console.error(`Error in PUT /api/qbos/${params.id}:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -93,10 +92,9 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  context: { params: { id: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await context.params;
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -108,22 +106,22 @@ export async function DELETE(
         { status: 401 }
       );
     }
-    const deleted = await jobService.deleteJob(id, userId);
+    const deleted = await qboService.deleteQBO(params.id, userId);
     if (!deleted) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Job not found'
+          error: 'QBO not found'
         },
         { status: 404 }
       );
     }
     return NextResponse.json({
       success: true,
-      message: 'Job deleted successfully'
+      message: 'QBO deleted successfully'
     });
   } catch (error) {
-    console.error(`Error in DELETE /api/jobs/${id}:`, error);
+    console.error(`Error in DELETE /api/qbos/${params.id}:`, error);
     return NextResponse.json(
       {
         success: false,

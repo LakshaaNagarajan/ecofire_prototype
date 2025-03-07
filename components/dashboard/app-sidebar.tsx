@@ -51,7 +51,7 @@ const items = [
 const backstageItems = [
   {
     title: "PI & QO Mapping",
-    url: "/dashboard/backstage/pi-qo-mapping",
+    url: "/dashboard/backstage/pi-qbo-mapping",
     icon: Target,
   },
   {
@@ -61,7 +61,7 @@ const backstageItems = [
   },
   {
     title: "PI Board",
-    url: "/dashboard/backstage/pis",
+    url: "/dashboard/backstage/PI",
     icon: BarChart2,
   },
 ]

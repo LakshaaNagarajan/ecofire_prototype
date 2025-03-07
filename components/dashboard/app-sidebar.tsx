@@ -61,7 +61,7 @@ const backstageItems = [
   },
   {
     title: "PI Board",
-    url: "/dashboard/backstage/pis",
+    url: "/dashboard/backstage/PI",
     icon: BarChart2,
   },
 ]

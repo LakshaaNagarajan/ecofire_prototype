@@ -55,7 +55,7 @@ const backstageItems = [
     icon: Target,
   },
   {
-    title: "QO Board",
+    title: "QBO Board",
     url: "/dashboard/backstage/qos",
     icon: Clipboard,
   },

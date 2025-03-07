@@ -15,14 +15,14 @@ export class BusinessFunctionService {
     try {
       await dbConnect();
       const existingFunctions = await BusinessFunction.find({ userId });
-      
+     
       if (existingFunctions.length === 0) {
         const defaultFunctions = this.defaultFunctions.map(name => ({
           name,
           userId,
           isDefault: true
         }));
-        
+       
         await BusinessFunction.insertMany(defaultFunctions);
       }
     } catch (error) {
@@ -42,7 +42,7 @@ export class BusinessFunctionService {
   }
 
   async createBusinessFunction(
-    name: string, 
+    name: string,
     userId: string
   ): Promise<BusinessFunctionType> {
     try {
@@ -59,27 +59,47 @@ export class BusinessFunctionService {
     }
   }
 
+  async updateBusinessFunction(
+    id: string,
+    name: string,
+    userId: string
+  ): Promise<BusinessFunctionType | null> {
+    try {
+      await dbConnect();
+      const businessFunction = await BusinessFunction.findOneAndUpdate(
+        { _id: id, userId },
+        { name },
+        { new: true }
+      ).lean();
+      
+      if (!businessFunction) {
+        return null;
+      }
+      
+      return JSON.parse(JSON.stringify(businessFunction));
+    } catch (error) {
+      throw new Error('Error updating business function in database');
+    }
+  }
+
   async deleteBusinessFunction(
-    id: string, 
+    id: string,
     userId: string
   ): Promise<boolean> {
     try {
       await dbConnect();
       const businessFunction = await BusinessFunction.findOne({ _id: id, userId });
-      
+     
       if (!businessFunction) {
         return false;
       }
-
-      if (businessFunction.isDefault) {
-        throw new Error('Cannot delete default business function');
-      }
-
-      const result = await BusinessFunction.findOneAndDelete({ 
-        _id: id, 
-        userId,
-        isDefault: false
+      
+      // Allow deletion of default business functions
+      const result = await BusinessFunction.findOneAndDelete({
+        _id: id,
+        userId
       });
+      
       return !!result;
     } catch (error) {
       throw new Error('Error deleting business function from database');

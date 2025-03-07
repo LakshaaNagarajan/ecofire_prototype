@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { BusinessFunctionService } from '@/lib/services/business-function.service';
+import { JobCountService } from '@/lib/services/job-count.service';
 import { auth } from '@clerk/nextjs/server';
 
 const businessFunctionService = new BusinessFunctionService();
+const jobCountService = new JobCountService();
 
 export async function GET() {
   try {
@@ -16,13 +18,23 @@ export async function GET() {
         { status: 401 }
       );
     }
-
+    
+    // Get all business functions
     const functions = await businessFunctionService.getAllBusinessFunctions(userId);
+    
+    // Get job counts for all business functions
+    const jobCounts = await jobCountService.getJobCountsByBusinessFunction(userId);
+    
+    // Merge the job counts with the business functions
+    const functionsWithCounts = functions.map(func => ({
+      ...func,
+      jobCount: jobCounts[func._id] || 0
+    }));
    
     return NextResponse.json({
       success: true,
-      count: functions.length,
-      data: functions
+      count: functionsWithCounts.length,
+      data: functionsWithCounts
     });
   } catch (error) {
     console.error('Error in GET /api/business-functions:', error);
@@ -48,13 +60,11 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
-
     const { name } = await request.json();
     const businessFunction = await businessFunctionService.createBusinessFunction(
-      name, 
+      name,
       userId
     );
-
     return NextResponse.json({
       success: true,
       data: businessFunction

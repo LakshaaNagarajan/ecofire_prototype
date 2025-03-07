@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MappingJP, columns, convertJPMappingToTableData } from "@/components/MappingJobsToPI/table/columns";
-import { MappingJPTable } from "@/components/MappingJobsToPI/table/MappingJP-table";
-import { MappingDialog } from "@/components/MappingJobsToPI/MappingJP-dialog";
+import { MappingJP, columns, convertJPMappingToTableData } from "@/components/pi-job-mapping/table/columns";
+import { MappingJPTable } from "@/components/pi-job-mapping/table/pi-job-mapping-table";
+import { MappingDialog } from "@/components/pi-job-mapping/pi-job-mapping-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

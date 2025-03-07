@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 // Import the database model type
-import { JobPiMapping } from "@/lib/models/PI-Job-Mapping.model";
+import { JobPiMapping } from "@/lib/models/pi-job-mapping.model";
 
 // Table-specific type that converts from the database model
 export type MappingJP = {

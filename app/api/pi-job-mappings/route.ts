@@ -2,7 +2,7 @@
 // description: Get all PIs
 
 import { NextResponse } from 'next/server';
-import { MappingService } from '@/lib/services/PI-Job-Mapping.service';
+import { MappingService } from '@/lib/services/pi-job-mapping.service';
 import { auth } from '@clerk/nextjs/server';
 
 const JPMappingService = new MappingService();

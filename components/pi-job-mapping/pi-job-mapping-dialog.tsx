@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { MappingJP } from "./table/columns";
 import { Job } from "@/components/jobs/table/columns";
-import { PI } from "@/components/PIS/table/columns";
+import { PI } from "@/components/pis/table/columns";
 
 
 

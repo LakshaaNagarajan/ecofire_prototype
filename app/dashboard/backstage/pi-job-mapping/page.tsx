@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PI, columns, convertPIsToTableData } from "@/components/PIS/table/columns";
-import { PISTable } from "@/components/PIS/table/PI-table";
-import { PIDialog } from "@/components/PIS/PI-dialog";
+import { PI, columns, convertPIsToTableData } from "@/components/pis/table/columns";
+import { PISTable } from "@/components/pis/table/pi-table";
+import { PIDialog } from "@/components/pis/pi-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

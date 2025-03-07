@@ -2,18 +2,21 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PiJobMappingPage from "@/components/mapping/pi-job-mapping";
+import PIQBOMappingsPage from "@/components/mapping/pi-qbo-mapping";
 
 export default function PiQboMappingPage() {
   return (
-    <Tabs defaultValue="account" className="w-auto">
+    <Tabs defaultValue="pi-job" className="w-auto ml-5">
       <TabsList>
-        <TabsTrigger value="account">PI to job mapping</TabsTrigger>
-        <TabsTrigger value="password">PI to QBO mapping</TabsTrigger>
+        <TabsTrigger value="pi-job">PI to job mapping</TabsTrigger>
+        <TabsTrigger value="pi-qbo">PI to QBO mapping</TabsTrigger>
       </TabsList>
-      <TabsContent value="account">
+      <TabsContent value="pi-job">
         <PiJobMappingPage/>
       </TabsContent>
-      <TabsContent value="password">Add qbo mapping page here</TabsContent>
+      <TabsContent value="pi-qbo">
+        <PIQBOMappingsPage/>
+      </TabsContent>
     </Tabs>
   );
 }

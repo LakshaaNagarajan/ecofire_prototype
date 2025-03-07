@@ -6,15 +6,15 @@ import PIQBOMappingsPage from "@/components/mapping/pi-qbo-mapping";
 
 export default function PiQboMappingPage() {
   return (
-    <Tabs defaultValue="account" className="w-auto ml-5">
+    <Tabs defaultValue="pi-job" className="w-auto ml-5">
       <TabsList>
-        <TabsTrigger value="account">PI to job mapping</TabsTrigger>
-        <TabsTrigger value="password">PI to QBO mapping</TabsTrigger>
+        <TabsTrigger value="pi-job">PI to job mapping</TabsTrigger>
+        <TabsTrigger value="pi-qbo">PI to QBO mapping</TabsTrigger>
       </TabsList>
-      <TabsContent value="account">
+      <TabsContent value="pi-job">
         <PiJobMappingPage/>
       </TabsContent>
-      <TabsContent value="password">
+      <TabsContent value="pi-qbo">
         <PIQBOMappingsPage/>
       </TabsContent>
     </Tabs>

@@ -8,13 +8,13 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = params.id;
+    //const id = params.id;
     const body = await request.json();
     const { name } = body;
 
@@ -25,7 +25,7 @@ export async function PUT(
       );
     }
 
-    const owner = await ownerService.updateOwner(id, name, userId);
+    const owner = await ownerService.updateOwner(params.id, name, userId);
     
     if (!owner) {
       return NextResponse.json(
@@ -49,14 +49,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = params.id;
-    const success = await ownerService.deleteOwner(id, userId);
+    //const id = params.id;
+    const success = await ownerService.deleteOwner(params.id, userId);
     
     if (!success) {
       return NextResponse.json(

@@ -4,6 +4,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -13,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Task } from "../types";
 
 interface DataTableProps<TData, TValue> {
@@ -21,14 +22,28 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
 }
 
-export function TasksTable<TData, TValue>({
+export function TasksTable<TData extends { completed?: boolean }, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  // Sort data to push completed tasks to the bottom
+  const sortedData = useMemo(() => {
+    // Create a new array to avoid mutating the original data
+    return [...data].sort((a, b) => {
+      // Since we've constrained TData to have a completed property, we can safely access it
+      const aCompleted = !!a.completed;
+      const bCompleted = !!b.completed;
+      
+      if (aCompleted === bCompleted) return 0;
+      return aCompleted ? 1 : -1;
+    });
+  }, [data]);
+
   const table = useReactTable({
-    data,
+    data: sortedData,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
@@ -54,23 +69,29 @@ export function TasksTable<TData, TValue>({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="overflow-hidden">
-                    <div className="overflow-hidden">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </div>
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+            table.getRowModel().rows.map((row) => {
+              // With our type constraint, we can safely access the completed property
+              const isCompleted = !!row.original.completed;
+              
+              return (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className={isCompleted ? "bg-muted/50" : ""}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="overflow-hidden">
+                      <div className={`overflow-hidden ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </div>
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">

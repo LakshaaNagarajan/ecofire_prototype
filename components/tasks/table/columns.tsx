@@ -40,6 +40,13 @@ export const columns = (
   {
     accessorKey: "title",
     header: "Title",
+    cell: ({ row }) => {
+      const title = row.getValue("title") as string;
+      const isCompleted = row.original.completed;
+      
+      // No need for additional styling here as the parent container will handle it
+      return title;
+    }
   },
   {
     accessorKey: "owner",
@@ -51,7 +58,7 @@ export const columns = (
   },
   {
     accessorKey: "date",
-    header: "Date",
+    header: "Do Date",
     cell: ({ row }) => {
       const date = row.getValue("date") as string | undefined;
       if (!date) return "No date";
@@ -66,7 +73,7 @@ export const columns = (
   },
   {
     accessorKey: "requiredHours",
-    header: "Hours",
+    header: "Hours Required",
     cell: ({ row }) => {
       const hours = row.getValue("requiredHours") as number | undefined;
       return hours !== undefined ? `${hours}h` : "N/A";
@@ -122,7 +129,7 @@ export const columns = (
       if (!notes) return "No notes";
       
       return (
-        <div className="max-h-[80px] min-h-[40px] w-[200px] overflow-y-auto rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm break-words whitespace-normal">
+        <div className="max-h-[160px] min-h-[60px] w-[300px] overflow-y-auto rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm break-words whitespace-normal">
           {notes}
         </div>
       );

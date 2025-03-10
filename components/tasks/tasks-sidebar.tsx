@@ -37,7 +37,8 @@ export function TasksSidebar({
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
 
-  
+  const { toast } = useToast();
+
   // Fetch tasks when job changes
   useEffect(() => {
     if (selectedJob) {
@@ -49,12 +50,12 @@ export function TasksSidebar({
 
   const fetchTasks = async () => {
     if (!selectedJob) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(`/api/tasks?jobId=${selectedJob.id}`);
       const result = await response.json();
-      
+
       if (result.success) {
         // Map from MongoDB _id to id for frontend consistency
         const formattedTasks = result.data.map((task: any) => ({
@@ -69,7 +70,7 @@ export function TasksSidebar({
           jobId: task.jobId,
           completed: task.completed,
         }));
-        
+
         setTasks(formattedTasks);
       } else {
         toast({
@@ -107,11 +108,11 @@ export function TasksSidebar({
       const response = await fetch(`/api/tasks/${id}`, {
         method: "DELETE",
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        setTasks(tasks.filter(task => task.id !== id));
+        setTasks(tasks.filter((task) => task.id !== id));
         toast({
           title: "Success",
           description: "Task deleted successfully",
@@ -142,13 +143,13 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ completed }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        setTasks(tasks.map(task => 
-          task.id === id ? { ...task, completed } : task
-        ));
+        setTasks(
+          tasks.map((task) => (task.id === id ? { ...task, completed } : task))
+        );
       } else {
         toast({
           title: "Error",
@@ -177,9 +178,9 @@ export function TasksSidebar({
           },
           body: JSON.stringify(taskData),
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
           // Map from MongoDB _id to id for frontend consistency
           const newTask: Task = {
@@ -194,7 +195,7 @@ export function TasksSidebar({
             jobId: result.data.jobId,
             completed: result.data.completed,
           };
-          
+
           setTasks([...tasks, newTask]);
           toast({
             title: "Success",
@@ -210,7 +211,7 @@ export function TasksSidebar({
       } else {
         // Update existing task
         if (!currentTask) return;
-        
+
         const response = await fetch(`/api/tasks/${currentTask.id}`, {
           method: "PUT",
           headers: {
@@ -218,9 +219,9 @@ export function TasksSidebar({
           },
           body: JSON.stringify(taskData),
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
           // Map from MongoDB _id to id for frontend consistency
           const updatedTask: Task = {
@@ -235,11 +236,13 @@ export function TasksSidebar({
             jobId: result.data.jobId,
             completed: result.data.completed,
           };
-          
-          setTasks(tasks.map(task => 
-            task.id === updatedTask.id ? updatedTask : task
-          ));
-          
+
+          setTasks(
+            tasks.map((task) =>
+              task.id === updatedTask.id ? updatedTask : task
+            )
+          );
+
           toast({
             title: "Success",
             description: "Task updated successfully",
@@ -269,17 +272,13 @@ export function TasksSidebar({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-md md:max-w-lg lg:max-w-xl overflow-y-auto" side="right">
+        <SheetContent
+          className="sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl overflow-y-auto"
+          side="right"
+        >
           <SheetHeader className="mb-4">
-            <div className="flex justify-between items-center">
-              <SheetTitle>Job Tasks</SheetTitle>
-              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <SheetDescription>
-              Manage tasks for this job
-            </SheetDescription>
+            <SheetTitle>Job Tasks</SheetTitle>
+            <SheetDescription>Manage tasks for this job</SheetDescription>
           </SheetHeader>
 
           {/* Job Details Card */}
@@ -291,19 +290,25 @@ export function TasksSidebar({
               {selectedJob.notes && (
                 <div>
                   <p className="text-sm font-medium">Notes:</p>
-                  <p className="text-sm text-muted-foreground">{selectedJob.notes}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedJob.notes}
+                  </p>
                 </div>
               )}
               {selectedJob.owner && (
                 <div>
                   <p className="text-sm font-medium">Owner:</p>
-                  <p className="text-sm text-muted-foreground">{selectedJob.owner}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedJob.owner}
+                  </p>
                 </div>
               )}
               {selectedJob.businessFunctionName && (
                 <div>
                   <p className="text-sm font-medium">Business Function:</p>
-                  <p className="text-sm text-muted-foreground">{selectedJob.businessFunctionName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedJob.businessFunctionName}
+                  </p>
                 </div>
               )}
               {selectedJob.dueDate && (

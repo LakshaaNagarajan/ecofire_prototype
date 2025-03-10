@@ -172,7 +172,7 @@ export function TaskDialog({
             {/* Date Field */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="date" className="text-right">
-                Date
+                Do Date
               </Label>
               <Input
                 id="date"
@@ -186,7 +186,7 @@ export function TaskDialog({
             {/* Required Hours Field */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="requiredHours" className="text-right">
-                Required Hours
+                Hours Required
               </Label>
               <Input
                 id="requiredHours"

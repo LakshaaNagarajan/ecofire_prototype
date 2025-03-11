@@ -1,4 +1,4 @@
-// route: /api/PIS/:id
+// route: /api/pis/:id
 // description: Get PI by id
 import { NextResponse } from 'next/server';
 import { MappingService } from '@/lib/services/pi-job-mapping.service';

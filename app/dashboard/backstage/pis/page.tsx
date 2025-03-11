@@ -19,7 +19,7 @@ export default function PIsPage() {
   const fetchPIs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/PIS');
+      const response = await fetch('/api/pis');
       const result = await response.json();
       
       if (result.success) {
@@ -42,7 +42,7 @@ export default function PIsPage() {
 
   const handleCreate = async (PIData: Partial<PI>) => {
     try {
-      const response = await fetch('/api/PIS', {
+      const response = await fetch('/api/pis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ export default function PIsPage() {
     if (!editingPI) return;
 
     try {
-      const response = await fetch(`/api/PIS/${editingPI.id}`, {
+      const response = await fetch(`/api/pis/${editingPI.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export default function PIsPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/PIS/${id}`, {
+      const response = await fetch(`/api/pis/${id}`, {
         method: 'DELETE',
       });
 

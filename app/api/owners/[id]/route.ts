@@ -46,7 +46,7 @@ export async function PUT(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -56,7 +56,8 @@ export async function DELETE(
     }
 
     //const id = params.id;
-    const success = await ownerService.deleteOwner(params.id, userId);
+    const { id } = await context.params;
+    const success = await ownerService.deleteOwner(id, userId);
     
     if (!success) {
       return NextResponse.json(

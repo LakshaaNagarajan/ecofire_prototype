@@ -19,7 +19,8 @@ import { Badge } from "@/components/ui/badge";
 export const columns = (
   onEdit: (task: Task) => void,
   onDelete: (id: string) => void,
-  onComplete: (id: string, completed: boolean) => void
+  onComplete: (id: string, completed: boolean) => void,
+  ownerMap: Record<string, string> = {}
 ): ColumnDef<Task>[] => [
   {
     id: "completed",
@@ -52,8 +53,16 @@ export const columns = (
     accessorKey: "owner",
     header: "Owner",
     cell: ({ row }) => {
-      const owner = row.getValue("owner") as string | undefined;
-      return owner || "Not assigned";
+      const ownerId = row.getValue("owner") as string | undefined;
+      
+      if (!ownerId) return "Not assigned";
+      
+      // Look up the owner name from the ownerMap
+      const ownerName = ownerMap[ownerId];
+      
+      // If the owner doesn't exist in our map (possibly deleted)
+      // return "Not assigned" - same as if no owner was set
+      return ownerName || "Not assigned"; 
     },
   },
   {

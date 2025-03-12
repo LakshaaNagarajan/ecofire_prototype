@@ -409,7 +409,6 @@ export default function JobsPage() {
           open={tasksSidebarOpen}
           onOpenChange={setTasksSidebarOpen}
           selectedJob={selectedJob}
-          owners={["Owner1", "Owner2"]}
         />
 
         {/* Toast for active jobs selection */}

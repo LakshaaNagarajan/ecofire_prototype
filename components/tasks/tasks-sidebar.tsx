@@ -18,26 +18,65 @@ import { Task } from "./types";
 import { Job } from "@/components/jobs/table/columns";
 import { useToast } from "@/hooks/use-toast";
 
+// Owner interface
+interface Owner {
+  _id: string;
+  name: string;
+  userId: string;
+}
+
 interface TasksSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedJob: Job | null;
-  owners?: string[]; // Available owners list
 }
 
 export function TasksSidebar({
   open,
   onOpenChange,
   selectedJob,
-  owners = [],
 }: TasksSidebarProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
+  const [owners, setOwners] = useState<Owner[]>([]);
+  const [ownerMap, setOwnerMap] = useState<Record<string, string>>({});
 
   const { toast } = useToast();
+
+  // Fetch owners from API
+  useEffect(() => {
+    const fetchOwners = async () => {
+      try {
+        const response = await fetch('/api/owners');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch owners: ${response.status}`);
+        }
+        
+        const ownersData = await response.json();
+        setOwners(ownersData);
+        
+        // Create a mapping from owner ID to owner name
+        const mapping: Record<string, string> = {};
+        ownersData.forEach((owner: Owner) => {
+          mapping[owner._id] = owner.name;
+        });
+        setOwnerMap(mapping);
+      } catch (error) {
+        console.error("Error fetching owners:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch owners list",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchOwners();
+  }, [toast]);
 
   // Fetch tasks when job changes
   useEffect(() => {
@@ -346,7 +385,8 @@ export function TasksSidebar({
               columns={columns(
                 handleEditTask,
                 handleDeleteTask,
-                handleCompleteTask
+                handleCompleteTask,
+                ownerMap
               )}
               data={tasks}
             />
@@ -362,7 +402,6 @@ export function TasksSidebar({
         onSubmit={handleTaskSubmit}
         initialData={currentTask}
         jobId={selectedJob.id}
-        owners={owners}
       />
     </>
   );

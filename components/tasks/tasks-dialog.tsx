@@ -1,5 +1,3 @@
-// components/tasks/task-dialog.tsx
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +20,13 @@ import {
 import { Task, FocusLevel, JoyLevel } from "./types";
 import { TagInput } from "@/components/tasks/tag-input";
 
+// Define Owner interface to match MongoDB document
+interface Owner {
+  _id: string;
+  name: string;
+  userId: string;
+}
+
 interface TaskDialogProps {
   mode: "create" | "edit";
   open: boolean;
@@ -29,7 +34,6 @@ interface TaskDialogProps {
   onSubmit: (task: Partial<Task>) => void;
   initialData?: Task;
   jobId: string;
-  owners?: string[]; // List of available owners
 }
 
 export function TaskDialog({
@@ -39,7 +43,6 @@ export function TaskDialog({
   onSubmit,
   initialData,
   jobId,
-  owners = [],
 }: TaskDialogProps) {
   // Form state with typed fields
   const [title, setTitle] = useState("");
@@ -55,6 +58,39 @@ export function TaskDialog({
   const [notes, setNotes] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
+  
+  // State for owners fetched from API
+  const [owners, setOwners] = useState<Owner[]>([]);
+  const [isLoadingOwners, setIsLoadingOwners] = useState(false);
+  const [ownerError, setOwnerError] = useState<string | null>(null);
+
+  // Fetch owners from API
+  useEffect(() => {
+    const fetchOwners = async () => {
+      setIsLoadingOwners(true);
+      setOwnerError(null);
+      
+      try {
+        const response = await fetch('/api/owners');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch owners: ${response.status}`);
+        }
+        
+        const ownersData = await response.json();
+        setOwners(ownersData);
+      } catch (error) {
+        console.error("Error fetching owners:", error);
+        setOwnerError("Failed to load owners. Please try again.");
+      } finally {
+        setIsLoadingOwners(false);
+      }
+    };
+    
+    if (open) {
+      fetchOwners();
+    }
+  }, [open]);
 
   // Initialize the form when the dialog opens or the initial data changes
   useEffect(() => {
@@ -67,7 +103,7 @@ export function TaskDialog({
       setFocusLevel(undefined);
       setJoyLevel(undefined);
       setNotes(undefined);
-      setTags([]); // Reset tags
+      setTags([]);
     } else if (initialData) {
       // Set data for edit mode
       setTitle(initialData.title);
@@ -84,7 +120,7 @@ export function TaskDialog({
       setFocusLevel(initialData.focusLevel);
       setJoyLevel(initialData.joyLevel);
       setNotes(initialData.notes);
-      setTags(initialData.tags || []); // Load tags
+      setTags(initialData.tags || []);
     }
   }, [mode, initialData, open]);
 
@@ -120,7 +156,7 @@ export function TaskDialog({
         setFocusLevel(undefined);
         setJoyLevel(undefined);
         setNotes(undefined);
-        setTags([]); // Reset tags
+        setTags([]);
       }
     } catch (error) {
       console.error("Error submitting task:", error);
@@ -165,19 +201,21 @@ export function TaskDialog({
                   onValueChange={(value) =>
                     setOwner(value === "none" ? undefined : value)
                   }
+                  disabled={isLoadingOwners}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an owner" />
+                    <SelectValue placeholder={isLoadingOwners ? "Loading owners..." : "Select an owner"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    {owners.map((ownerName) => (
-                      <SelectItem key={ownerName} value={ownerName}>
-                        {ownerName}
+                    {owners.map((ownerItem) => (
+                      <SelectItem key={ownerItem._id} value={ownerItem._id}>
+                        {ownerItem.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {ownerError && <p className="text-sm text-red-500 mt-1">{ownerError}</p>}
               </div>
             </div>
 

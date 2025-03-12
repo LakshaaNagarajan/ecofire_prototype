@@ -7,6 +7,7 @@ import { MappingDialog } from "@/components/pi-job-mapping/pi-job-mapping-dialog
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUser } from "@clerk/nextjs";
 
 export default function PiJobMappingPage() {
   const [data, setData] = useState<MappingJP[]>([]);
@@ -14,31 +15,59 @@ export default function PiJobMappingPage() {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPI, setEditingPI] = useState<MappingJP | undefined>(undefined);
+  const [pisList, setPisList] = useState<any[]>([]);
+  const [jobsList, setJobsList] = useState<any[]>([]);
+  
   const { toast } = useToast();
+  const { user, isLoaded } = useUser();
 
-  const fetchPIs = async () => {
+  const fetchData = async () => {
+    if (!isLoaded || !user) return;
+    
     try {
       setLoading(true);
-      const response = await fetch('/api/pi-job-mappings');
-      const result = await response.json();
+      // Fetch data from API endpoints
+      const [pisResponse, jobsResponse, mappingsResponse] = await Promise.all([
+        fetch('/api/pis'),
+        fetch('/api/jobs'),
+        fetch('/api/pi-job-mappings')
+      ]);
       
-      if (result.success) {
-        const tableData = convertJPMappingToTableData(result.data);
+      if (!pisResponse.ok || !jobsResponse.ok || !mappingsResponse.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      
+      const pisData = await pisResponse.json();
+      const jobsData = await jobsResponse.json();
+      const mappingsResult = await mappingsResponse.json();
+      
+      setPisList(pisData.data || []);
+      setJobsList(jobsData.data || []);
+      
+      if (mappingsResult.success) {
+        const tableData = convertJPMappingToTableData(mappingsResult.data);
         setData(tableData);
       } else {
-        setError(result.error);
+        setError(mappingsResult.error);
       }
     } catch (err) {
       setError('Failed to fetch Mapping');
       console.error('Error fetching Mapping:', err);
+      toast({
+        title: "Error",
+        description: "Failed to load data",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPIs();
-  }, []);
+    if (isLoaded && user) {
+      fetchData();
+    }
+  }, [isLoaded, user]);
 
   const handleCreate = async (PIData: Partial<MappingJP>) => {
     try {
@@ -57,15 +86,15 @@ export default function PiJobMappingPage() {
           title: "Success",
           description: "Mapping created successfully",
         });
-        fetchPIs();
+        fetchData();
         setDialogOpen(false);
       } else {
         throw new Error(result.error);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to create Mapping",
+        description: error.message || "Failed to create Mapping",
         variant: "destructive",
       });
     }
@@ -90,14 +119,14 @@ export default function PiJobMappingPage() {
           title: "Success",
           description: "Mapping updated successfully",
         });
-        fetchPIs();
+        fetchData();
       } else {
         throw new Error(result.error);
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update Mapping",
+        description: error.message || "Failed to update Mapping",
         variant: "destructive",
       });
     }
@@ -116,7 +145,7 @@ export default function PiJobMappingPage() {
           title: "Success",
           description: "Mapping deleted successfully",
         });
-        fetchPIs();
+        fetchData();
       } else {
         throw new Error(result.error);
       }
@@ -131,7 +160,6 @@ export default function PiJobMappingPage() {
 
   const handleOpenEdit = (MJP: MappingJP) => {
     setEditingPI(MJP);
-    
     setDialogOpen(true);
   };
 
@@ -157,28 +185,29 @@ export default function PiJobMappingPage() {
   }
 
   return (
-    <div className="p-4">
-      <div className="container mx-auto py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Mapping Job and PI</h1>
-          <Button onClick={handleOpenCreate} className="bg-blue-500 hover:bg-blue-600">
-            <Plus className="mr-2 h-4 w-4"/>Add Mapping
-          </Button>
-        </div>
-        
-        <MappingJPTable 
-          columns={columns(handleOpenEdit, handleDelete)} 
-          data={data} 
-        />
-
-        <MappingDialog
-          mode={editingPI ? 'edit' : 'create'}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          onSubmit={editingPI ? handleEdit : handleCreate}
-          initialData={editingPI}
-        />
+    <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Mapping Job and PI</h1>
+        <Button onClick={handleOpenCreate} className="bg-blue-500 hover:bg-blue-600">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Mapping
+        </Button>
       </div>
+      
+      <MappingJPTable 
+        columns={columns(handleOpenEdit, handleDelete)} 
+        data={data} 
+      />
+
+      <MappingDialog
+        mode={editingPI ? 'edit' : 'create'}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={editingPI ? handleEdit : handleCreate}
+        initialData={editingPI}
+        pisList={pisList}
+        jobsList={jobsList}
+      />
     </div>
   );
 }

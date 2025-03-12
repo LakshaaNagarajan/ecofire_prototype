@@ -32,6 +32,7 @@ function convertJobsToTableData(
       owner: job.owner || undefined,
       dueDate: job.dueDate ? new Date(job.dueDate).toISOString() : undefined,
       isDone: job.isDone || false,
+      impact: Number(job.impact) || 0
     };
   });
 }

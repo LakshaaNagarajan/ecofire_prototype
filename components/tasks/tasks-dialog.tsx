@@ -242,7 +242,7 @@ export function TaskDialog({
                 id="requiredHours"
                 type="number"
                 min="0"
-                step="0.5"
+                step="any"
                 value={requiredHours === undefined ? "" : requiredHours}
                 onChange={(e) => {
                   const value = e.target.value;

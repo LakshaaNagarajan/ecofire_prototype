@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, Download, Dog, Target, Clipboard, BarChart2, ChevronDown } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, Download, Dog, Target, Clipboard, BarChart2, ChevronDown, Users } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -37,8 +37,8 @@ const items = [
   },
   {
     title: "Team",
-    url: "#",
-    icon: Settings,
+    url: "/dashboard/owners",
+    icon: Users,
   },
   {
     title: "Jija",

@@ -391,7 +391,8 @@ export default function JobsPage() {
           columns={completedColumns(
             handleOpenEdit,
             handleDelete,
-            handleCompletedSelect
+            handleCompletedSelect,
+            handleOpenTasksSidebar
           )}
           data={completedJobs}
         />

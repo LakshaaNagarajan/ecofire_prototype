@@ -30,7 +30,6 @@ export function PIDialog({
   initialData 
 }: PIDialogProps) {
   const [formData, setFormData] = useState<Partial<PI>>(() => {
-    
     return {
       name: '',
       unit: '',
@@ -43,7 +42,7 @@ export function PIDialog({
 
   // Reset the form when the dialog opens or the initialData changes
   useEffect(() => {
-     {
+    if (mode === 'create') {
       setFormData({
         name: '',
         unit: '',   
@@ -52,8 +51,19 @@ export function PIDialog({
         deadline: '',      
         notes: ''
       });
+    } else if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        unit: initialData.unit || '',
+        beginningValue: initialData.beginningValue || 0,
+        targetValue: initialData.targetValue || 0,
+        deadline: initialData.deadline
+          ? new Date(initialData.deadline).toISOString().split('T')[0]
+          : '',
+        notes: initialData.notes || ''
+      });
     }
-  }, [initialData, open]);
+  }, [initialData, open, mode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,10 +72,15 @@ export function PIDialog({
     const submissionData = { ...formData };
     
     // Format the deadline for API submission
-   
+    if (submissionData.deadline) {
+      submissionData.deadline = `${submissionData.deadline}T00:00:00.000Z`;
+    }
     
     // Submit the data to the parent component
     onSubmit(submissionData);
+    
+    // Close the dialog
+    onOpenChange(false);
   };
 
   const handleNumberChange = (field: keyof PI, value: string) => {

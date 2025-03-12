@@ -1,6 +1,7 @@
 // lib/models/qbo.model.ts
 import mongoose from "mongoose";
 
+// lib/models/qbo.model.ts
 export interface JobPiMapping extends mongoose.Document {
   _id: string;
   jobId: string;
@@ -8,16 +9,16 @@ export interface JobPiMapping extends mongoose.Document {
   jobName: string;
   piName: string;
   piImpactValue: number;
+  piTarget: number; // Added field
   notes?: string;
   userId: string;
 }
 
-/* PISchema will correspond to a collection in your MongoDB database. */
 const MappingJobToPISchema = new mongoose.Schema<JobPiMapping>({
   userId: {
     type: String,
     required: [true, "User ID is required"],
-    index: true // Add index for better query performance
+    index: true
   },
   jobId: {
     type: String,
@@ -27,19 +28,22 @@ const MappingJobToPISchema = new mongoose.Schema<JobPiMapping>({
     type: String,
     required: true,
   },
-
-    piName: {
+  piName: {
     type: String,
     required: true,
-    },
-
-    jobName: {
+  },
+  jobName: {
     type: String,
     required: true,
-    },
+  },
   piImpactValue: {
     type: Number,
     required: [true, "Please provide a current value."],
+    default: 0
+  },
+  piTarget: {  
+    type: Number,
+    required: false,
     default: 0
   },
   notes: {

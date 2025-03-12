@@ -19,14 +19,14 @@ import { JobPiMapping } from "@/lib/models/pi-job-mapping.model";
 
 // Table-specific type that converts from the database model
 export type MappingJP = {
-  id: string
+  id: string;
   jobId: string;
   jobName: string;
   piName: string;
   piId: string;
   piImpactValue: number;
+  piTarget: number; // Added field
   notes?: string;
- 
 };
 
 // Function to convert from database model to table data
@@ -38,13 +38,8 @@ export function convertJPMappingToTableData(JPMap: JobPiMapping[]): MappingJP[] 
     piImpactValue: JobPiMapping.piImpactValue || 0,
     jobName: JobPiMapping.jobName,
     piName: JobPiMapping.piName || '',
-    //points: PI.points || 0,
-    //deadline: JobPiMapping.deadline ? 
-    // Handle both string and Date objects
-  //  (typeof JobPiMapping.deadline === 'string' ? JobPiMapping.deadline : JobPiMapping.deadline.toISOString()) 
- //   : '',
+    piTarget: JobPiMapping.piTarget || 0, // Added field
     notes: JobPiMapping.notes || ''
-   
   }));
 }
 
@@ -59,6 +54,14 @@ export const columns = (
   {
     accessorKey: "piName",
     header: "PI Name",
+  },
+  {
+    accessorKey: "piTarget",
+    header: "PI Target",
+    cell: ({ row }) => {
+      const value = row.getValue("piTarget") as number;
+      return value.toString();
+    }
   },
   {
     accessorKey: "piImpactValue",

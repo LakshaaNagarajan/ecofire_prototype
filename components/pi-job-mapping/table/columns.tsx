@@ -110,7 +110,7 @@ export const columns = (
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete the Mapping between
-                  "{JP.jobId}" and "{JP.piId}" and remove it from our servers.
+                  "{JP.jobName}" and "{JP.piName}" and remove it from our servers.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

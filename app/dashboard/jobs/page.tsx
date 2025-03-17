@@ -102,7 +102,7 @@ export default function JobsPage() {
         });
       } else if (ownersResult.data && Array.isArray(ownersResult.data)) {
         // Case 2: API returns { data: [...owners] }
-        ownersResult.data.forEach((owner) => {
+        ownersResult.data.forEach((owner: any) => {
           if (owner._id && owner.name) {
             ownerMap[owner._id] = owner.name;
           }
@@ -126,7 +126,7 @@ export default function JobsPage() {
       // Map task IDs to owner names
       const taskOwnerMapping: Record<string, string> = {};
       
-      tasks.forEach((task) => {
+      tasks.forEach((task: any) => {
         // In your system, task.owner should be the owner ID
         if (task.owner && typeof task.owner === 'string') {
           // Look up the owner name from our previously built map
@@ -488,6 +488,7 @@ export default function JobsPage() {
           open={tasksSidebarOpen}
           onOpenChange={setTasksSidebarOpen}
           selectedJob={selectedJob}
+          onRefreshJobs={fetchJobs}
         />
 
         {/* Toast for active jobs selection */}

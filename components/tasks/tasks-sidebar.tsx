@@ -30,12 +30,14 @@ interface TasksSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedJob: Job | null;
+  onRefreshJobs?: () => void; // Simple callback to refresh jobs data
 }
 
 export function TasksSidebar({
   open,
   onOpenChange,
   selectedJob,
+  onRefreshJobs,
 }: TasksSidebarProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -227,7 +229,50 @@ export function TasksSidebar({
   const handleNextTaskChange = async (taskId: string): Promise<void> => {
     if (!selectedJob) return;
     
-    await updateJobNextTask(taskId);
+    try {
+      // Update the job with the new next task ID
+      const taskIdToSave = taskId === "none" ? null : taskId;
+      
+      const response = await fetch(`/api/jobs/${selectedJob.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ nextTaskId: taskIdToSave }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+  
+      // Update local state
+      setNextTaskId(taskIdToSave || undefined);
+      
+      // Update isNextTask flag for all tasks
+      setTasks(
+        tasks.map((task) => ({
+          ...task,
+          isNextTask: task.id === taskIdToSave
+        }))
+      );
+      
+      // Call onRefreshJobs to trigger a refresh of all jobs data
+      if (typeof onRefreshJobs === 'function') {
+        onRefreshJobs();
+      }
+      
+      toast({
+        title: "Success",
+        description: "Next task updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating next task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update next task",
+        variant: "destructive",
+      });
+    }
   };
 
   const updateJobNextTask = async (taskId: string): Promise<void> => {

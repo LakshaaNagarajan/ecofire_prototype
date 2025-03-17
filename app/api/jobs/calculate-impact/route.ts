@@ -14,7 +14,7 @@ export async function POST() {
       );
     }
 
-    const result = await updateJobImpactValues();
+    const result = await updateJobImpactValues(userId);
     
     if (result.success) {
       return NextResponse.json(result);

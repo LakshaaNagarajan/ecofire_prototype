@@ -24,6 +24,8 @@ export type Job = {
   owner?: string;
   dueDate?: string;
   isDone: boolean;
+  nextTaskId?: string;  // Added field to track the next task
+  tasks?: string[];     // Added field to store task IDs
 };
 
 export const columns = (

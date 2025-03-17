@@ -10,11 +10,9 @@ export interface Jobs extends mongoose.Document {
   dueDate?: Date;
   isDone: boolean;
   impact?: Number;
+  nextTaskId?: string; // Added field to track the next task
+  tasks?: string[]; // Array of task IDs associated with this job
 }
-
-// interface tasks {
-// }
-// TODO: Add tasks to the Jobs interface once we have a tasks feature added to the jobs table
 
 enum level {
     "High",
@@ -58,8 +56,16 @@ const JobSchema = new mongoose.Schema<Jobs>({
     type: Number,
     default: 0,
     required: false 
+  },
+  nextTaskId: {
+    type: String,
+    required: false
+  },
+  tasks: {
+    type: [String],
+    required: false,
+    default: []
   }
-
 });
 
 export default mongoose.models.Job || mongoose.model<Jobs>("Job", JobSchema);

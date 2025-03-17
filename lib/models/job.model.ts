@@ -4,14 +4,14 @@ export interface Jobs extends mongoose.Document {
   _id: string;
   title: string;
   notes: string;
-  owner: string;
   businessFunctionId: string;   
   userId: string;
   dueDate?: Date;
   isDone: boolean;
   impact?: Number;
-  nextTaskId?: string; // Added field to track the next task
+  nextTaskId?: string; // Field to track the next task
   tasks?: string[]; // Array of task IDs associated with this job
+  // owner field removed as it's now derived from the next task's owner
 }
 
 enum level {
@@ -34,10 +34,6 @@ const JobSchema = new mongoose.Schema<Jobs>({
   notes: {
     type: String,
     required: false,
-  },
-  owner: {
-    type: String,
-    required: [false, "Please provide the Job owner's name"], // TODO: Change to true once we have an owners feature added to the jobs table
   },
   businessFunctionId: {
     type: String, 

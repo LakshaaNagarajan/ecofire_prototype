@@ -436,14 +436,6 @@ export function TasksSidebar({
                   </p>
                 </div>
               )}
-              {selectedJob.owner && (
-                <div>
-                  <p className="text-sm font-medium">Owner:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedJob.owner}
-                  </p>
-                </div>
-              )}
               {selectedJob.businessFunctionName && (
                 <div>
                   <p className="text-sm font-medium">Business Function:</p>

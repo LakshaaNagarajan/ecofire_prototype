@@ -10,8 +10,9 @@ import { Plus, ArrowUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { completedColumns } from "@/components/jobs/table/completedColumns";
 import { TasksSidebar } from "@/components/tasks/tasks-sidebar";
+import { Task } from "@/components/tasks/types";
 
-// Updated to include business functions
+// Updated to include business functions and remove owner
 function convertJobsToTableData(
   jobs: Jobs[],
   businessFunctions: BusinessFunctionForDropdown[],
@@ -28,10 +29,11 @@ function convertJobsToTableData(
       notes: job.notes || undefined,
       businessFunctionId: job.businessFunctionId || undefined,
       businessFunctionName: businessFunction?.name || undefined,
-      owner: job.owner || undefined,
       dueDate: job.dueDate ? new Date(job.dueDate).toISOString() : undefined,
       isDone: job.isDone || false,
-      impact: job.impact || 0,
+      nextTaskId: job.nextTaskId || undefined,
+      tasks: job.tasks || [],
+      // Owner removed as it's now derived from the next task
     };
   });
 }
@@ -54,6 +56,7 @@ export default function JobsPage() {
   >(new Set());
   const [tasksSidebarOpen, setTasksSidebarOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [taskOwnerMap, setTaskOwnerMap] = useState<Record<string, string>>({});
 
   const { toast } = useToast();
 
@@ -75,6 +78,69 @@ export default function JobsPage() {
     } catch (error) {
       console.error("Error fetching business functions:", error);
       return [];
+    }
+  };
+
+  // New improved fetchTaskOwners function to properly map owner names
+  const fetchTaskOwners = async (taskIds: string[]) => {
+    if (!taskIds.length) return;
+    
+    try {
+      // First, fetch all owners for this user
+      const ownersResponse = await fetch('/api/owners');
+      const ownersResult = await ownersResponse.json();
+      
+      let ownerMap: Record<string, string> = {};
+      
+      // Check the structure of the owners response
+      if (Array.isArray(ownersResult)) {
+        // Case 1: API returns direct array of owners
+        ownersResult.forEach((owner) => {
+          if (owner._id && owner.name) {
+            ownerMap[owner._id] = owner.name;
+          }
+        });
+      } else if (ownersResult.data && Array.isArray(ownersResult.data)) {
+        // Case 2: API returns { data: [...owners] }
+        ownersResult.data.forEach((owner: any) => {
+          if (owner._id && owner.name) {
+            ownerMap[owner._id] = owner.name;
+          }
+        });
+      }
+      
+      // Now fetch the tasks with the owner IDs we want to map
+      const queryParams = new URLSearchParams();
+      taskIds.forEach(id => queryParams.append('ids', id));
+      
+      const tasksResponse = await fetch(`/api/tasks/batch?${queryParams.toString()}`);
+      const tasksResult = await tasksResponse.json();
+      
+      if (!tasksResult.success && !tasksResult.data) {
+        console.error('Tasks API did not return success or data');
+        return;
+      }
+      
+      const tasks = tasksResult.data || tasksResult;
+      
+      // Map task IDs to owner names
+      const taskOwnerMapping: Record<string, string> = {};
+      
+      tasks.forEach((task: any) => {
+        // In your system, task.owner should be the owner ID
+        if (task.owner && typeof task.owner === 'string') {
+          // Look up the owner name from our previously built map
+          taskOwnerMapping[task.id] = ownerMap[task.owner] || 'Not assigned';
+        } else {
+          taskOwnerMapping[task.id] = 'Not assigned';
+        }
+      });
+      
+      // Update the state with our new mapping
+      setTaskOwnerMap(taskOwnerMapping);
+      
+    } catch (error) {
+      console.error('Error creating task owner mapping:', error);
     }
   };
 
@@ -219,11 +285,22 @@ export default function JobsPage() {
       const jobsResult = await jobsResponse.json();
 
       if (jobsResult.success) {
+        // Collect all next task IDs to fetch their owners
+        const taskIds = jobsResult.data
+          .filter((job: any) => job.nextTaskId)
+          .map((job: any) => job.nextTaskId);
+        
+        // Fetch task owners if any tasks exist
+        if (taskIds.length > 0) {
+          fetchTaskOwners(taskIds);
+        }
+        
         // Use the business functions we just fetched
         const allJobs = convertJobsToTableData(
           jobsResult.data,
           currentBusinessFunctions,
         );
+        
         // Separate active and completed jobs
         setActiveJobs(allJobs.filter((job) => !job.isDone));
         setCompletedJobs(allJobs.filter((job) => job.isDone));
@@ -253,6 +330,7 @@ export default function JobsPage() {
           ...jobData,
           // Ensure we're sending businessFunctionId, not businessFunctionName
           businessFunctionId: jobData.businessFunctionId,
+          // No need to send owner as it's derived from the next task
         }),
       });
 
@@ -289,6 +367,7 @@ export default function JobsPage() {
           ...jobData,
           // Ensure we're sending businessFunctionId, not businessFunctionName
           businessFunctionId: jobData.businessFunctionId,
+          // No need to send owner as it's derived from the next task
         }),
       });
 
@@ -412,12 +491,7 @@ export default function JobsPage() {
         </div>
 
         <DataTable
-          columns={columns(
-            handleOpenEdit,
-            handleDelete,
-            handleActiveSelect,
-            handleOpenTasksSidebar,
-          )}
+          columns={columns(handleOpenEdit, handleDelete, handleActiveSelect, handleOpenTasksSidebar, taskOwnerMap)}
           data={activeJobs}
         />
 
@@ -431,6 +505,7 @@ export default function JobsPage() {
             handleDelete,
             handleCompletedSelect,
             handleOpenTasksSidebar,
+            taskOwnerMap
           )}
           data={completedJobs}
         />
@@ -447,6 +522,7 @@ export default function JobsPage() {
           open={tasksSidebarOpen}
           onOpenChange={setTasksSidebarOpen}
           selectedJob={selectedJob}
+          onRefreshJobs={fetchJobs}
         />
 
         {/* Toast for active jobs selection */}

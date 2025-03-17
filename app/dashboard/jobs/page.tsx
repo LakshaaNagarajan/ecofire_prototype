@@ -33,6 +33,7 @@ function convertJobsToTableData(
       isDone: job.isDone || false,
       nextTaskId: job.nextTaskId || undefined,
       tasks: job.tasks || [],
+      impact: job.impact || 0,
       // Owner removed as it's now derived from the next task
     };
   });

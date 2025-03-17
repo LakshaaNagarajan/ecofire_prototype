@@ -54,15 +54,15 @@ export function TasksSidebar({
   useEffect(() => {
     const fetchOwners = async () => {
       try {
-        const response = await fetch('/api/owners');
-        
+        const response = await fetch("/api/owners");
+
         if (!response.ok) {
           throw new Error(`Failed to fetch owners: ${response.status}`);
         }
-        
+
         const ownersData = await response.json();
         setOwners(ownersData);
-        
+
         // Create a mapping from owner ID to owner name
         const mapping: Record<string, string> = {};
         ownersData.forEach((owner: Owner) => {
@@ -78,7 +78,7 @@ export function TasksSidebar({
         });
       }
     };
-    
+
     fetchOwners();
   }, [toast]);
 
@@ -116,7 +116,7 @@ export function TasksSidebar({
           tags: task.tags || [],
           jobId: task.jobId,
           completed: task.completed,
-          isNextTask: task._id === selectedJob.nextTaskId
+          isNextTask: task._id === selectedJob.nextTaskId,
         }));
 
         setTasks(formattedTasks);
@@ -164,7 +164,7 @@ export function TasksSidebar({
         if (id === nextTaskId) {
           await updateJobNextTask("none");
         }
-        
+
         setTasks(tasks.filter((task) => task.id !== id));
         toast({
           title: "Success",
@@ -205,7 +205,7 @@ export function TasksSidebar({
           // Clear the next task since it's now completed
           await updateJobNextTask("none");
         }
-        
+
         setTasks(
           tasks.map((task) => (task.id === id ? { ...task, completed } : task))
         );
@@ -228,11 +228,11 @@ export function TasksSidebar({
 
   const handleNextTaskChange = async (taskId: string): Promise<void> => {
     if (!selectedJob) return;
-    
+
     try {
       // Update the job with the new next task ID
       const taskIdToSave = taskId === "none" ? null : taskId;
-      
+
       const response = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",
         headers: {
@@ -240,27 +240,27 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ nextTaskId: taskIdToSave }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Server responded with status: ${response.status}`);
       }
-  
+
       // Update local state
       setNextTaskId(taskIdToSave || undefined);
-      
+
       // Update isNextTask flag for all tasks
       setTasks(
         tasks.map((task) => ({
           ...task,
-          isNextTask: task.id === taskIdToSave
+          isNextTask: task.id === taskIdToSave,
         }))
       );
-      
+
       // Call onRefreshJobs to trigger a refresh of all jobs data
-      if (typeof onRefreshJobs === 'function') {
+      if (typeof onRefreshJobs === "function") {
         onRefreshJobs();
       }
-      
+
       toast({
         title: "Success",
         description: "Next task updated successfully",
@@ -277,10 +277,10 @@ export function TasksSidebar({
 
   const updateJobNextTask = async (taskId: string): Promise<void> => {
     if (!selectedJob) return;
-    
+
     try {
       const taskIdToSave = taskId === "none" ? null : taskId;
-      
+
       const response = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",
         headers: {
@@ -294,12 +294,12 @@ export function TasksSidebar({
       if (result.success) {
         // Update local state
         setNextTaskId(taskIdToSave || undefined);
-        
+
         // Update isNextTask flag for all tasks
         setTasks(
           tasks.map((task) => ({
             ...task,
-            isNextTask: task.id === taskIdToSave
+            isNextTask: task.id === taskIdToSave,
           }))
         );
       } else {
@@ -313,6 +313,12 @@ export function TasksSidebar({
 
   const handleTaskSubmit = async (taskData: Partial<Task>) => {
     try {
+      // Make sure tags is always defined as an array
+      const processedTaskData = {
+        ...taskData,
+        tags: taskData.tags || [],
+      };
+
       if (dialogMode === "create") {
         // Create new task
         const response = await fetch("/api/tasks", {
@@ -320,7 +326,7 @@ export function TasksSidebar({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(taskData),
+          body: JSON.stringify(processedTaskData),
         });
 
         const result = await response.json();
@@ -339,12 +345,12 @@ export function TasksSidebar({
             tags: result.data.tags || [],
             jobId: result.data.jobId,
             completed: result.data.completed,
-            isNextTask: false
+            isNextTask: false,
           };
 
           // Add task ID to job's tasks array
           if (selectedJob) {
-            await updateJobTasks([...tasks.map(t => t.id), newTask.id]);
+            await updateJobTasks([...tasks.map((t) => t.id), newTask.id]);
           }
 
           setTasks([...tasks, newTask]);
@@ -368,7 +374,7 @@ export function TasksSidebar({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(taskData),
+          body: JSON.stringify(processedTaskData),
         });
 
         const result = await response.json();
@@ -387,7 +393,7 @@ export function TasksSidebar({
             tags: result.data.tags || [],
             jobId: result.data.jobId,
             completed: result.data.completed,
-            isNextTask: result.data._id === nextTaskId
+            isNextTask: result.data._id === nextTaskId,
           };
 
           setTasks(
@@ -420,7 +426,7 @@ export function TasksSidebar({
 
   const updateJobTasks = async (taskIds: string[]): Promise<void> => {
     if (!selectedJob) return;
-    
+
     try {
       const response = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",

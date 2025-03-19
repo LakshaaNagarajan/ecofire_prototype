@@ -6,11 +6,12 @@ import { Job, columns } from "@/components/jobs/table/columns";
 import { DataTable } from "@/components/jobs/table/jobs-table";
 import { JobDialog } from "@/components/jobs/job-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowUp } from "lucide-react";
+import { Plus, ArrowUp, LayoutGrid, LayoutList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { completedColumns } from "@/components/jobs/table/completedColumns";
 import { TasksSidebar } from "@/components/tasks/tasks-sidebar";
 import { Task } from "@/components/tasks/types";
+import { JobsGrid } from "@/components/jobs/jobs-grid";
 
 // Updated to include business functions and remove owner
 function convertJobsToTableData(
@@ -58,6 +59,7 @@ export default function JobsPage() {
   const [tasksSidebarOpen, setTasksSidebarOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [taskOwnerMap, setTaskOwnerMap] = useState<Record<string, string>>({});
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   const { toast } = useToast();
 
@@ -143,6 +145,17 @@ export default function JobsPage() {
     } catch (error) {
       console.error('Error creating task owner mapping:', error);
     }
+  };
+
+  // Function to calculate the percentage of completed tasks for a job
+  const calculateJobProgress = (job: Job) => {
+    // This is a placeholder implementation - you'll need to adjust based on your data structure
+    if (!job.tasks || job.tasks.length === 0) return 0;
+    
+    // Ideally, you would fetch task completion status from your API
+    // For now, we'll use a random value between 0 and 100 for display purposes
+    // In production, you should replace this with actual data
+    return Math.floor(Math.random() * 101); // Random value between 0 and 100
   };
 
   // Function to handle active job selection
@@ -428,7 +441,7 @@ export default function JobsPage() {
     setDialogOpen(true);
   };
 
-  // New function to handle opening the tasks sidebar
+  // Function to handle opening the tasks sidebar
   const handleOpenTasksSidebar = (job: Job) => {
     setSelectedJob(job);
     setTasksSidebarOpen(true);
@@ -436,7 +449,7 @@ export default function JobsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center h-64">
         <div className="text-lg">Loading jobs...</div>
       </div>
     );
@@ -444,18 +457,37 @@ export default function JobsPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex items-center justify-center h-64">
         <div className="text-lg text-red-500">Error: {error}</div>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <div className="container mx-auto py-10">
+    <div className="p-4 w-full">
+      <div className="w-full max-w-none py-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Jobs</h1>
           <div className="flex gap-2">
+            <div className="flex items-center border rounded-md overflow-hidden mr-2">
+              <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                className="rounded-none"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="sm"
+                className="rounded-none"
+                onClick={() => setViewMode("table")}
+              >
+                <LayoutList className="h-4 w-4" />
+              </Button>
+            </div>
+            
             <Button
               variant="outline"
               onClick={async () => {
@@ -491,25 +523,49 @@ export default function JobsPage() {
           </div>
         </div>
 
-        <DataTable
-          columns={columns(handleOpenEdit, handleDelete, handleActiveSelect, handleOpenTasksSidebar, taskOwnerMap)}
-          data={activeJobs}
-        />
+        {viewMode === "grid" ? (
+          <JobsGrid 
+            data={activeJobs}
+            onEdit={handleOpenEdit}
+            onDelete={handleDelete}
+            onSelect={handleActiveSelect}
+            onOpenTasksSidebar={handleOpenTasksSidebar}
+            taskOwnerMap={taskOwnerMap}
+            selectedJobs={selectedActiveJobs}
+          />
+        ) : (
+          <DataTable
+            columns={columns(handleOpenEdit, handleDelete, handleActiveSelect, handleOpenTasksSidebar, taskOwnerMap)}
+            data={activeJobs}
+          />
+        )}
 
         <div className="mt-16 mb-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold">Completed Jobs</h2>
         </div>
 
-        <DataTable
-          columns={completedColumns(
-            handleOpenEdit,
-            handleDelete,
-            handleCompletedSelect,
-            handleOpenTasksSidebar,
-            taskOwnerMap
-          )}
-          data={completedJobs}
-        />
+        {viewMode === "grid" ? (
+          <JobsGrid
+            data={completedJobs}
+            onEdit={handleOpenEdit}
+            onDelete={handleDelete}
+            onSelect={handleCompletedSelect}
+            onOpenTasksSidebar={handleOpenTasksSidebar}
+            taskOwnerMap={taskOwnerMap}
+            selectedJobs={selectedCompletedJobs}
+          />
+        ) : (
+          <DataTable
+            columns={completedColumns(
+              handleOpenEdit,
+              handleDelete,
+              handleCompletedSelect,
+              handleOpenTasksSidebar,
+              taskOwnerMap
+            )}
+            data={completedJobs}
+          />
+        )}
 
         <JobDialog
           mode={editingJob ? "edit" : "create"}
@@ -528,7 +584,7 @@ export default function JobsPage() {
 
         {/* Toast for active jobs selection */}
         {selectedActiveJobs.size > 0 && (
-          <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-lg border shadow-lg">
+          <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-lg border shadow-lg z-50">
             <span className="text-sm font-medium">
               {selectedActiveJobs.size}{" "}
               {selectedActiveJobs.size === 1 ? "job" : "jobs"} selected
@@ -548,7 +604,7 @@ export default function JobsPage() {
 
         {/* Toast for completed jobs selection */}
         {selectedCompletedJobs.size > 0 && (
-          <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-lg border shadow-lg">
+          <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-background/80 backdrop-blur-sm p-4 rounded-lg border shadow-lg z-50">
             <span className="text-sm font-medium">
               {selectedCompletedJobs.size}{" "}
               {selectedCompletedJobs.size === 1 ? "job" : "jobs"} selected

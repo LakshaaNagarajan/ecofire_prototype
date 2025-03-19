@@ -26,6 +26,7 @@ export type Job = {
   nextTaskId?: string;  // Added field to track the next task
   tasks?: string[];     // Added field to store task IDs
   // Owner field removed as it's now derived from next task
+  impact?: number;
 };
 
 export const columns = (
@@ -120,6 +121,14 @@ export const columns = (
         month: "short",
         day: "numeric",
       });
+    },
+  },
+  {
+    accessorKey: "impact",
+    header: "Impact",
+    cell: ({ row }) => {
+      const value = row.getValue("impact") as number | undefined;
+      return value !== undefined ? value.toString() : "N/A";
     },
   },
   {

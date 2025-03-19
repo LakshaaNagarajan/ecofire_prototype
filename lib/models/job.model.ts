@@ -8,7 +8,7 @@ export interface Jobs extends mongoose.Document {
   userId: string;
   dueDate?: Date;
   isDone: boolean;
-  impact?: Number;
+  impact?: number;
   nextTaskId?: string; // Field to track the next task
   tasks?: string[]; // Array of task IDs associated with this job
   // owner field removed as it's now derived from the next task's owner

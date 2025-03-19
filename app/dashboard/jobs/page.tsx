@@ -15,7 +15,7 @@ import { Task } from "@/components/tasks/types";
 // Updated to include business functions and remove owner
 function convertJobsToTableData(
   jobs: Jobs[],
-  businessFunctions: BusinessFunctionForDropdown[]
+  businessFunctions: BusinessFunctionForDropdown[],
 ): Job[] {
   return jobs.map((job) => {
     // Find the business function name if it exists
@@ -33,6 +33,7 @@ function convertJobsToTableData(
       isDone: job.isDone || false,
       nextTaskId: job.nextTaskId || undefined,
       tasks: job.tasks || [],
+      impact: job.impact || 0,
       // Owner removed as it's now derived from the next task
     };
   });
@@ -49,7 +50,7 @@ export default function JobsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | undefined>(undefined);
   const [selectedActiveJobs, setSelectedActiveJobs] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [selectedCompletedJobs, setSelectedCompletedJobs] = useState<
     Set<string>
@@ -183,19 +184,19 @@ export default function JobsPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ isDone: true }),
-        })
+        }),
       );
 
       await Promise.all(promises);
 
       // Move selected jobs from active to completed
       const jobsToMove = activeJobs.filter((job) =>
-        selectedActiveJobs.has(job.id)
+        selectedActiveJobs.has(job.id),
       );
       const updatedJobs = jobsToMove.map((job) => ({ ...job, isDone: true }));
 
       setActiveJobs((prev) =>
-        prev.filter((job) => !selectedActiveJobs.has(job.id))
+        prev.filter((job) => !selectedActiveJobs.has(job.id)),
       );
       setCompletedJobs((prev) => [...prev, ...updatedJobs]);
 
@@ -229,19 +230,19 @@ export default function JobsPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ isDone: false }),
-        })
+        }),
       );
 
       await Promise.all(promises);
 
       // Move selected jobs from completed to active
       const jobsToMove = completedJobs.filter((job) =>
-        selectedCompletedJobs.has(job.id)
+        selectedCompletedJobs.has(job.id),
       );
       const updatedJobs = jobsToMove.map((job) => ({ ...job, isDone: false }));
 
       setCompletedJobs((prev) =>
-        prev.filter((job) => !selectedCompletedJobs.has(job.id))
+        prev.filter((job) => !selectedCompletedJobs.has(job.id)),
       );
       setActiveJobs((prev) => [...prev, ...updatedJobs]);
 
@@ -265,21 +266,21 @@ export default function JobsPage() {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      
+
       // First fetch business functions
-      const bfResponse = await fetch('/api/business-functions');
+      const bfResponse = await fetch("/api/business-functions");
       const bfResult = await bfResponse.json();
-      
+
       let currentBusinessFunctions = [];
       if (bfResult.success) {
         currentBusinessFunctions = bfResult.data.map((bf: any) => ({
           id: bf._id,
-          name: bf.name
+          name: bf.name,
         }));
         // Update state for later use
         setBusinessFunctions(currentBusinessFunctions);
       }
-      
+
       // Then fetch jobs
       const jobsResponse = await fetch("/api/jobs");
       const jobsResult = await jobsResponse.json();
@@ -296,7 +297,10 @@ export default function JobsPage() {
         }
         
         // Use the business functions we just fetched
-        const allJobs = convertJobsToTableData(jobsResult.data, currentBusinessFunctions);
+        const allJobs = convertJobsToTableData(
+          jobsResult.data,
+          currentBusinessFunctions,
+        );
         
         // Separate active and completed jobs
         setActiveJobs(allJobs.filter((job) => !job.isDone));
@@ -451,9 +455,40 @@ export default function JobsPage() {
       <div className="container mx-auto py-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Jobs</h1>
-          <Button onClick={handleOpenCreate}>
-            <Plus className="mr-2 h-4 w-4" /> Create Job
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const response = await fetch("/api/jobs/calculate-impact", {
+                    method: "POST",
+                  });
+                  const result = await response.json();
+
+                  if (result.success) {
+                    toast({
+                      title: "Success",
+                      description: `${result.message}`,
+                    });
+                    fetchJobs(); // Refresh jobs to show updated impact values
+                  } else {
+                    throw new Error(result.error);
+                  }
+                } catch (error) {
+                  toast({
+                    title: "Error",
+                    description: "Failed to calculate job impact values",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              Recalculate Impact
+            </Button>
+            <Button onClick={handleOpenCreate}>
+              <Plus className="mr-2 h-4 w-4" /> Create Job
+            </Button>
+          </div>
         </div>
 
         <DataTable
@@ -483,7 +518,7 @@ export default function JobsPage() {
           onSubmit={editingJob ? handleEdit : handleCreate}
           initialData={editingJob}
         />
-        
+
         <TasksSidebar
           open={tasksSidebarOpen}
           onOpenChange={setTasksSidebarOpen}

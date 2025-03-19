@@ -10,14 +10,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, X } from "lucide-react";
-import { TasksTable } from "./table/tasks-table";
-import { columns } from "./table/columns";
+import { Plus } from "lucide-react";
 import { TaskDialog } from "./tasks-dialog";
 import { Task } from "./types";
 import { Job } from "@/components/jobs/table/columns";
 import { useToast } from "@/hooks/use-toast";
 import { NextTaskSelector } from "./next-task-selector";
+import { TaskCards } from "./table/task-grid"; // Import our new TaskCards component
 
 // Owner interface
 interface Owner {
@@ -451,16 +450,6 @@ export function TasksSidebar({
     return null;
   }
 
-  // Sort tasks to show the next task first
-  const sortedTasks = [...tasks].sort((a, b) => {
-    // If a is the next task, it comes first
-    if (a.isNextTask) return -1;
-    // If b is the next task, it comes first
-    if (b.isNextTask) return 1;
-    // Otherwise, keep the original order
-    return 0;
-  });
-
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -526,21 +515,21 @@ export function TasksSidebar({
             </Button>
           </div>
 
-          {/* Tasks Table */}
+          {/* Tasks Cards (replacing Tasks Table) */}
           {isLoading ? (
             <div className="flex justify-center p-8">
               <p>Loading tasks...</p>
             </div>
           ) : (
-            <TasksTable
-              columns={columns(
-                handleEditTask,
-                handleDeleteTask,
-                handleCompleteTask,
-                ownerMap
-              )}
-              data={sortedTasks}
-            />
+            <div className="mt-6">
+              <TaskCards
+                data={tasks}
+                onEdit={handleEditTask}
+                onDelete={handleDeleteTask}
+                onComplete={handleCompleteTask}
+                ownerMap={ownerMap}
+              />
+            </div>
           )}
         </SheetContent>
       </Sheet>

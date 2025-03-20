@@ -12,6 +12,7 @@ import { completedColumns } from "@/components/jobs/table/completedColumns";
 import { TasksSidebar } from "@/components/tasks/tasks-sidebar";
 import { Task } from "@/components/tasks/types";
 import { JobsGrid } from "@/components/jobs/jobs-grid";
+import FilterComponent from "@/components/filters/filter-component"; // Import the FilterComponent
 
 // Updated to include business functions and remove owner
 function convertJobsToTableData(
@@ -42,7 +43,9 @@ function convertJobsToTableData(
 
 export default function JobsPage() {
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
+  const [filteredActiveJobs, setFilteredActiveJobs] = useState<Job[]>([]);
   const [completedJobs, setCompletedJobs] = useState<Job[]>([]);
+  const [filteredCompletedJobs, setFilteredCompletedJobs] = useState<Job[]>([]);
   const [businessFunctions, setBusinessFunctions] = useState<
     BusinessFunctionForDropdown[]
   >([]);
@@ -61,6 +64,9 @@ export default function JobsPage() {
   const [taskOwnerMap, setTaskOwnerMap] = useState<Record<string, string>>({});
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [needsRefresh, setNeedsRefresh] = useState(false);
+  const [owners, setOwners] = useState<{ _id: string; name: string }[]>([]);
+  const [taskDetails, setTaskDetails] = useState<Record<string, any>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
 
   const { toast } = useToast();
 
@@ -81,6 +87,34 @@ export default function JobsPage() {
       return [];
     } catch (error) {
       console.error("Error fetching business functions:", error);
+      return [];
+    }
+  };
+
+  // New function to fetch all owners
+  const fetchOwners = async () => {
+    try {
+      const response = await fetch('/api/owners');
+      const result = await response.json();
+      
+      let ownersData: { _id: string; name: string }[] = [];
+      
+      if (Array.isArray(result)) {
+        ownersData = result.map(owner => ({
+          _id: owner._id,
+          name: owner.name
+        }));
+      } else if (result.data && Array.isArray(result.data)) {
+        ownersData = result.data.map((owner: any) => ({
+          _id: owner._id,
+          name: owner.name
+        }));
+      }
+      
+      setOwners(ownersData);
+      return ownersData;
+    } catch (error) {
+      console.error("Error fetching owners:", error);
       return [];
     }
   };
@@ -130,18 +164,25 @@ export default function JobsPage() {
       // Map task IDs to owner names
       const taskOwnerMapping: Record<string, string> = {};
       
+      // Also store the detailed task information for filtering
+      const taskDetailsMap: Record<string, any> = {};
+      
       tasks.forEach((task: any) => {
+        // Store task details for filtering
+        taskDetailsMap[task.id || task._id] = task;
+        
         // In your system, task.owner should be the owner ID
         if (task.owner && typeof task.owner === 'string') {
           // Look up the owner name from our previously built map
-          taskOwnerMapping[task.id] = ownerMap[task.owner] || 'Not assigned';
+          taskOwnerMapping[task.id || task._id] = ownerMap[task.owner] || 'Not assigned';
         } else {
-          taskOwnerMapping[task.id] = 'Not assigned';
+          taskOwnerMapping[task.id || task._id] = 'Not assigned';
         }
       });
       
       // Update the state with our new mapping
       setTaskOwnerMap(taskOwnerMapping);
+      setTaskDetails(taskDetailsMap);
       
     } catch (error) {
       console.error('Error creating task owner mapping:', error);
@@ -214,6 +255,12 @@ export default function JobsPage() {
       );
       setCompletedJobs((prev) => [...prev, ...updatedJobs]);
 
+      // Also update filtered jobs
+      setFilteredActiveJobs((prev) =>
+        prev.filter((job) => !selectedActiveJobs.has(job.id)),
+      );
+      setFilteredCompletedJobs((prev) => [...prev, ...updatedJobs]);
+
       // Clear selection
       setSelectedActiveJobs(new Set());
 
@@ -260,6 +307,12 @@ export default function JobsPage() {
       );
       setActiveJobs((prev) => [...prev, ...updatedJobs]);
 
+      // Also update filtered jobs
+      setFilteredCompletedJobs((prev) =>
+        prev.filter((job) => !selectedCompletedJobs.has(job.id)),
+      );
+      setFilteredActiveJobs((prev) => [...prev, ...updatedJobs]);
+
       // Clear selection
       setSelectedCompletedJobs(new Set());
 
@@ -295,6 +348,9 @@ export default function JobsPage() {
         setBusinessFunctions(currentBusinessFunctions);
       }
 
+      // Also fetch owners for filters
+      await fetchOwners();
+
       // Then fetch jobs
       const jobsResponse = await fetch("/api/jobs");
       const jobsResult = await jobsResponse.json();
@@ -307,7 +363,7 @@ export default function JobsPage() {
         
         // Fetch task owners if any tasks exist
         if (taskIds.length > 0) {
-          fetchTaskOwners(taskIds);
+          await fetchTaskOwners(taskIds);
         }
         
         // Use the business functions we just fetched
@@ -317,8 +373,13 @@ export default function JobsPage() {
         );
         
         // Separate active and completed jobs
-        setActiveJobs(allJobs.filter((job) => !job.isDone));
-        setCompletedJobs(allJobs.filter((job) => job.isDone));
+        const activeJobs = allJobs.filter((job) => !job.isDone);
+        const completedJobs = allJobs.filter((job) => job.isDone);
+        
+        setActiveJobs(activeJobs);
+        setFilteredActiveJobs(activeJobs);
+        setCompletedJobs(completedJobs);
+        setFilteredCompletedJobs(completedJobs);
       } else {
         setError(jobsResult.error);
       }
@@ -333,6 +394,78 @@ export default function JobsPage() {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  // New function to handle filter changes
+  const handleFilterChange = (filters: Record<string, any>) => {
+    setActiveFilters(filters);
+    
+    // Filter active jobs
+    const filteredActive = activeJobs.filter(job => {
+      return matchesFilters(job, filters);
+    });
+    
+    // Filter completed jobs - only apply non-status filters
+    const nonStatusFilters = { ...filters };
+    delete nonStatusFilters.isDone;
+    
+    const filteredCompleted = completedJobs.filter(job => {
+      // If isDone filter is true, show completed jobs, otherwise hide them
+      if (filters.isDone === true) {
+        return matchesFilters(job, nonStatusFilters);
+      } else {
+        return false; // Hide completed jobs if not explicitly showing them
+      }
+    });
+    
+    setFilteredActiveJobs(filteredActive);
+    setFilteredCompletedJobs(filteredCompleted);
+  };
+  
+  // Helper function to check if a job matches filters
+  const matchesFilters = (job: Job, filters: Record<string, any>): boolean => {
+    let matches = true;
+    
+    // Get the associated task for this job (if it has a nextTaskId)
+    const nextTask = job.nextTaskId ? taskDetails[job.nextTaskId] : null;
+    
+    // Process each filter
+    Object.entries(filters).forEach(([key, value]) => {
+      // Skip empty values or "any" values
+      if (value === "" || value === null || value === undefined || value === "any") return;
+      
+      switch (key) {
+        // Job filters
+        case 'businessFunctionId':
+          if (job.businessFunctionId !== value) matches = false;
+          break;
+        case 'dueDate':
+          if (!job.dueDate || new Date(job.dueDate) > new Date(value)) matches = false;
+          break;
+        case 'isDone':
+          if (job.isDone !== value) matches = false;
+          break;
+          
+        // Task filters (applied to the job's next task)
+        case 'focusLevel':
+          if (!nextTask || nextTask.focusLevel !== value) matches = false;
+          break;
+        case 'joyLevel':
+          if (!nextTask || nextTask.joyLevel !== value) matches = false;
+          break;
+        case 'owner':
+          if (!nextTask || nextTask.owner !== value) matches = false;
+          break;
+        case 'minHours':
+          if (!nextTask || !nextTask.requiredHours || nextTask.requiredHours < value) matches = false;
+          break;
+        case 'maxHours':
+          if (!nextTask || !nextTask.requiredHours || nextTask.requiredHours > value) matches = false;
+          break;
+      }
+    });
+    
+    return matches;
+  };
 
   const handleCreate = async (jobData: Partial<Job>) => {
     try {
@@ -535,9 +668,17 @@ export default function JobsPage() {
           </div>
         </div>
 
+        {/* Add the FilterComponent here */}
+        <FilterComponent
+          onFilterChange={handleFilterChange}
+          businessFunctions={businessFunctions}
+          owners={owners}
+          initialFilters={activeFilters}
+        />
+
         {viewMode === "grid" ? (
           <JobsGrid 
-            data={activeJobs}
+            data={filteredActiveJobs} // Use filtered jobs instead of all active jobs
             onEdit={handleOpenEdit}
             onDelete={handleDelete}
             onSelect={handleActiveSelect}
@@ -548,35 +689,40 @@ export default function JobsPage() {
         ) : (
           <DataTable
             columns={columns(handleOpenEdit, handleDelete, handleActiveSelect, handleOpenTasksSidebar, taskOwnerMap)}
-            data={activeJobs}
+            data={filteredActiveJobs} // Use filtered jobs instead of all active jobs
           />
         )}
 
-        <div className="mt-16 mb-6 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Completed Jobs</h2>
-        </div>
+        {/* Only show completed jobs section if there are any to display or isDone filter is active */}
+        {(filteredCompletedJobs.length > 0 || activeFilters.isDone === true) && (
+          <>
+            <div className="mt-16 mb-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Completed Jobs</h2>
+            </div>
 
-        {viewMode === "grid" ? (
-          <JobsGrid
-            data={completedJobs}
-            onEdit={handleOpenEdit}
-            onDelete={handleDelete}
-            onSelect={handleCompletedSelect}
-            onOpenTasksSidebar={handleOpenTasksSidebar}
-            taskOwnerMap={taskOwnerMap}
-            selectedJobs={selectedCompletedJobs}
-          />
-        ) : (
-          <DataTable
-            columns={completedColumns(
-              handleOpenEdit,
-              handleDelete,
-              handleCompletedSelect,
-              handleOpenTasksSidebar,
-              taskOwnerMap
+            {viewMode === "grid" ? (
+              <JobsGrid
+                data={filteredCompletedJobs} // Use filtered jobs instead of all completed jobs
+                onEdit={handleOpenEdit}
+                onDelete={handleDelete}
+                onSelect={handleCompletedSelect}
+                onOpenTasksSidebar={handleOpenTasksSidebar}
+                taskOwnerMap={taskOwnerMap}
+                selectedJobs={selectedCompletedJobs}
+              />
+            ) : (
+              <DataTable
+                columns={completedColumns(
+                  handleOpenEdit,
+                  handleDelete,
+                  handleCompletedSelect,
+                  handleOpenTasksSidebar,
+                  taskOwnerMap
+                )}
+                data={filteredCompletedJobs} // Use filtered jobs instead of all completed jobs
+              />
             )}
-            data={completedJobs}
-          />
+          </>
         )}
 
         <JobDialog

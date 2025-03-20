@@ -1,7 +1,14 @@
 import React from "react";
-import { 
-  Calendar, Clock, Briefcase, ChevronRight, 
-  Edit, Trash2, Circle, Smile, FileText
+import {
+  Calendar,
+  Clock,
+  Briefcase,
+  ChevronRight,
+  Edit,
+  Trash2,
+  Circle,
+  Smile,
+  FileText,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -32,7 +39,7 @@ export function NextTasks({
   businessFunctionMap,
   loading = false,
   onEditTask,
-  onDeleteTask
+  onDeleteTask,
 }: NextTasksProps) {
   // Format date
   const formatDate = (dateString?: Date | string) => {
@@ -56,11 +63,11 @@ export function NextTasks({
     if (!jobId || !jobs[jobId]) return "Unknown project";
     return jobs[jobId].title || "Unknown project";
   };
-  
+
   // Get business function name from ID
   const getBusinessFunctionName = (jobId?: string) => {
     if (!jobId || !jobs[jobId]) return null;
-    
+
     // First check if we have a name in our business function map
     if (businessFunctionMap && jobs[jobId].businessFunctionId) {
       const businessFunctionId = jobs[jobId].businessFunctionId;
@@ -68,12 +75,12 @@ export function NextTasks({
         return businessFunctionMap[businessFunctionId];
       }
     }
-    
+
     // Check if we have a business function name directly
     if (jobs[jobId].businessFunctionName) {
       return jobs[jobId].businessFunctionName;
     }
-    
+
     // Return null if we can't find a name
     return null;
   };
@@ -92,7 +99,7 @@ export function NextTasks({
         return "text-orange-500";
     }
   };
-  
+
   // Get joy level display color
   const getJoyLevelColor = (level?: string) => {
     if (!level) return "text-gray-500"; // Default to medium
@@ -112,7 +119,7 @@ export function NextTasks({
   const isNextTask = (task: any, jobsData: Record<string, any>) => {
     // Find the job this task belongs to
     const job = jobsData[task.jobId];
-    
+
     // Check if this job has marked this task as next
     return job && job.nextTaskId === task._id;
   };
@@ -125,7 +132,9 @@ export function NextTasks({
     return (
       <Card className="w-full">
         <CardContent className="p-6 flex flex-col items-center justify-center min-h-40">
-          <p className="text-muted-foreground">No next steps assigned</p>
+          <p className="text-muted-foreground">
+            No tasks assigned as next actionable step
+          </p>
         </CardContent>
       </Card>
     );
@@ -133,124 +142,123 @@ export function NextTasks({
 
   return (
     <div className="space-y-4 w-full">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Next Steps</h2>
-      </div>
-      
-      <div className="space-y-4 w-full">
-        {tasks.map((task) => (
-          <Card 
-            key={task._id}
-            className="overflow-hidden hover:shadow-md transition-shadow w-full"
-          >
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                {/* Checkbox */}
-                <div className="pt-1">
-                  <Checkbox
-                    checked={task.completed === true}
-                    onCheckedChange={(value) => onComplete(task._id, !!value)}
-                    aria-label="Mark as completed"
-                  />
+      {tasks.map((task) => (
+        <Card
+          key={task._id}
+          className="overflow-hidden hover:shadow-md transition-shadow w-full"
+        >
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              {/* Checkbox */}
+              <div className="pt-1">
+                <Checkbox
+                  checked={task.completed === true}
+                  onCheckedChange={(value) => onComplete(task._id, !!value)}
+                  aria-label="Mark as completed"
+                />
+              </div>
+
+              {/* Content */}
+              <div
+                className="flex-1 cursor-pointer group"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewTask(task);
+                }}
+              >
+                {/* Task title */}
+                <div className="mb-5 flex justify-between items-start">
+                  <div className="flex items-center">
+                    <h3 className="text-base font-semibold group-hover:text-primary transition-colors">
+                      {task.title}
+                    </h3>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                
-                {/* Content */}
-                <div 
-                  className="flex-1 cursor-pointer group" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewTask(task);
-                  }}
-                >
-                  {/* Task title */}
-                  <div className="mb-3 flex justify-between items-start">
-                    <div className="flex items-center">
-                      <h3 className="text-base font-semibold group-hover:text-primary transition-colors">
-                        {task.title}
-                      </h3>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  
-                  {/* Parent job info */}
-                  <div className="flex items-center gap-2 mb-3">
-                    {getBusinessFunctionName(task.jobId) && (
-                      <Badge variant="secondary">
-                        {getBusinessFunctionName(task.jobId)}
-                      </Badge>
-                    )}
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <Briefcase className="h-3 w-3 mr-1" />
-                      <span>{getJobTitle(task.jobId)}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Task details */}
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    {/* Owner */}
-                    <div className="flex items-center">
-                      <div className="h-6 w-6 rounded-full bg-secondary overflow-hidden flex items-center justify-center text-xs font-medium mr-2">
-                        {getOwnerName(task.owner).charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-sm">{getOwnerName(task.owner)}</span>
-                    </div>
-                    
-                    {/* Focus Level */}
-                    {task.focusLevel && (
-                      <div className="flex items-center">
-                        <Circle 
-                          className={`h-4 w-4 mr-1 ${getFocusLevelColor(task.focusLevel)}`} 
-                          fill="currentColor" 
-                        />
-                        <span className="text-sm">Focus: {task.focusLevel}</span>
-                      </div>
-                    )}
-                    
-                    {/* Joy Level */}
-                    {task.joyLevel && (
-                      <div className="flex items-center ml-4">
-                        <Smile 
-                          className={`h-4 w-4 mr-1 ${getJoyLevelColor(task.joyLevel)}`} 
-                        />
-                        <span className="text-sm">Joy: {task.joyLevel}</span>
-                      </div>
-                    )}
-                    
-                    {/* Date */}
-                    {task.date && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        <span className="text-sm">{formatDate(task.date)}</span>
-                      </div>
-                    )}
-                    
-                    {/* Hours */}
-                    {task.requiredHours !== undefined && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Clock className="h-4 w-4 mr-1" />
-                        <span className="text-sm">{task.requiredHours} hrs</span>
-                      </div>
-                    )}
+
+                {/* Parent job info */}
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Briefcase className="h-3 w-3 mr-1" />
+                    <span>{getJobTitle(task.jobId)}</span>
                   </div>
                 </div>
-                
-                {/* Action buttons */}
-                <div className="flex flex-col gap-2">
-                  {onAddToCalendar && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddToCalendar(task);
-                      }}
-                      title="Add to calendar"
-                    >
-                      <Calendar className="h-4 w-4" />
-                    </Button>
+
+                {/* Task details */}
+                <div className="flex flex-wrap gap-4 text-sm">
+                  {getBusinessFunctionName(task.jobId) && (
+                    <Badge variant="secondary">
+                      {getBusinessFunctionName(task.jobId)}
+                    </Badge>
                   )}
-                  
+
+                  {/* Focus Level */}
+                  {task.focusLevel && (
+                    <div className="flex items-center">
+                      <Circle
+                        className={`h-4 w-4 mr-1 ${getFocusLevelColor(
+                          task.focusLevel
+                        )}`}
+                        fill="currentColor"
+                      />
+                      <span className="text-sm">Focus: {task.focusLevel}</span>
+                    </div>
+                  )}
+
+                  {/* Joy Level */}
+                  {task.joyLevel && (
+                    <div className="flex items-center ml-4">
+                      <Smile
+                        className={`h-4 w-4 mr-1 ${getJoyLevelColor(
+                          task.joyLevel
+                        )}`}
+                      />
+                      <span className="text-sm">Joy: {task.joyLevel}</span>
+                    </div>
+                  )}
+
+                  {/* Date */}
+                  {task.date && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{formatDate(task.date)}</span>
+                    </div>
+                  )}
+
+                  {/* Hours */}
+                  {task.requiredHours !== undefined && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{task.requiredHours} hrs</span>
+                    </div>
+                  )}
+                  {/* Owner */}
+                  <div className="flex items-center">
+                    <div className="h-6 w-6 rounded-full bg-secondary overflow-hidden flex items-center justify-center text-xs font-medium mr-2">
+                      {getOwnerName(task.owner).charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm">{getOwnerName(task.owner)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex">
+                {onAddToCalendar && (
+                  <Button
+                    variant="ghost"
+                    size="default"
+                    className="h-8 mr-2 px-2 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToCalendar(task);
+                    }}
+                    title="Add to calendar"
+                  >
+                    <Calendar className="h-4 w-4" /> Add to Calender
+                  </Button>
+                )}
+                <div className="flex flex-col gap-2">
                   {/* Notes button */}
                   <Button
                     variant="ghost"
@@ -264,7 +272,7 @@ export function NextTasks({
                   >
                     <FileText className="h-4 w-4" />
                   </Button>
-                  
+
                   {onEditTask && (
                     <Button
                       variant="ghost"
@@ -279,7 +287,7 @@ export function NextTasks({
                       <Edit className="h-4 w-4" />
                     </Button>
                   )}
-                  
+
                   {onDeleteTask && (
                     <Button
                       variant="ghost"
@@ -287,7 +295,11 @@ export function NextTasks({
                       className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (window.confirm("Are you sure you want to delete this task?")) {
+                        if (
+                          window.confirm(
+                            "Are you sure you want to delete this task?"
+                          )
+                        ) {
                           onDeleteTask(task._id);
                         }
                       }}
@@ -298,10 +310,10 @@ export function NextTasks({
                   )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
@@ -312,7 +324,7 @@ function NextTasksSkeletonLoader() {
       <div className="flex justify-between items-center mb-4">
         <Skeleton className="h-7 w-32" />
       </div>
-      
+
       <div className="space-y-4">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="overflow-hidden w-full">

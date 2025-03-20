@@ -1,5 +1,4 @@
 "use client";
-
 import { useMemo } from "react";
 import { Task } from "../types";
 import { TaskCard } from "../tasks-card";
@@ -21,29 +20,39 @@ export function TaskCards({
 }: TaskCardsProps) {
   // Sort data to push completed tasks to the bottom and next task to the top
   const sortedData = useMemo(() => {
+    console.log("Sorting tasks, total:", data.length);
+    
+    // Debug: log completion status of each task
+    data.forEach(task => {
+      console.log(`Task: ${task.title}, Completed: ${task.completed}, Next: ${task.isNextTask}`);
+    });
+    
     // Create a new array to avoid mutating the original data
     return [...data].sort((a, b) => {
       // First, sort by completion status
-      const aCompleted = !!a.completed;
-      const bCompleted = !!b.completed;
+      const aCompleted = Boolean(a.completed);
+      const bCompleted = Boolean(b.completed);
       
       if (aCompleted !== bCompleted) {
-        return aCompleted ? 1 : -1;
+        return aCompleted ? 1 : -1; // Completed tasks go to the bottom
       }
       
       // If both have the same completion status, sort by next task status
-      const aIsNextTask = !!a.isNextTask;
-      const bIsNextTask = !!b.isNextTask;
-      
-      if (aIsNextTask !== bIsNextTask) {
-        return aIsNextTask ? -1 : 1;
+      // but only if they're not completed
+      if (!aCompleted && !bCompleted) {
+        const aIsNextTask = Boolean(a.isNextTask);
+        const bIsNextTask = Boolean(b.isNextTask);
+        
+        if (aIsNextTask !== bIsNextTask) {
+          return aIsNextTask ? -1 : 1; // Next task goes to the top
+        }
       }
       
       // If both have the same completion and next task status, keep original order
       return 0;
     });
-  }, [data]);
-
+  }, [data]); // Ensure this reruns when data changes
+  
   if (!sortedData.length) {
     return (
       <div className="p-8 text-center text-gray-500 border rounded-md">
@@ -51,10 +60,9 @@ export function TaskCards({
       </div>
     );
   }
-
+  
   return (
     <div className="space-y-1">
-      {/* Display tasks grouped by completion status */}
       <div className="space-y-3">
         {sortedData.map((task) => (
           <TaskCard
@@ -62,7 +70,16 @@ export function TaskCards({
             task={task}
             onEdit={onEdit}
             onDelete={onDelete}
-            onComplete={onComplete}
+            onComplete={(id, completed) => {
+              // When a task is completed, call the handler
+              onComplete(id, completed);
+              
+              // If this is the next task and it's being completed,
+              // make sure to update the isNextTask property
+              if (task.isNextTask && completed) {
+                task.isNextTask = false; // Remove next task status if completed
+              }
+            }}
             ownerMap={ownerMap}
           />
         ))}

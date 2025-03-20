@@ -60,6 +60,7 @@ export default function JobsPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [taskOwnerMap, setTaskOwnerMap] = useState<Record<string, string>>({});
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [needsRefresh, setNeedsRefresh] = useState(false);
 
   const { toast } = useToast();
 
@@ -445,6 +446,17 @@ export default function JobsPage() {
   const handleOpenTasksSidebar = (job: Job) => {
     setSelectedJob(job);
     setTasksSidebarOpen(true);
+    // Reset the needs refresh flag when opening sidebar
+    setNeedsRefresh(false);
+  };
+  const handleSidebarClose = (open: boolean) => {
+    // If the sidebar is being closed and we need a refresh
+    if (!open && needsRefresh) {
+      fetchJobs();
+    }
+    
+    // Update the sidebar state
+    setTasksSidebarOpen(open);
   };
 
   if (loading) {
@@ -577,9 +589,9 @@ export default function JobsPage() {
 
         <TasksSidebar
           open={tasksSidebarOpen}
-          onOpenChange={setTasksSidebarOpen}
+          onOpenChange={handleSidebarClose}
           selectedJob={selectedJob}
-          onRefreshJobs={fetchJobs}
+          onRefreshJobs={() => setNeedsRefresh(true)}
         />
 
         {/* Toast for active jobs selection */}

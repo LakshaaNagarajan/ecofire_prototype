@@ -28,8 +28,7 @@ export function NextTaskSelector({
     currentNextTaskId
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
+  const { toast } = useToast();  
   // Update selected task if the current next task changes
   useEffect(() => {
     setSelectedTaskId(currentNextTaskId);

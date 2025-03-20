@@ -44,6 +44,12 @@ export function JobCard({
   const [progress, setProgress] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [taskCounts, setTaskCounts] = useState<TaskCounts>({ total: 0, completed: 0 });
+  const [currentJob, setCurrentJob] = useState<Job>(job);
+  
+  // Update currentJob when props change
+  useEffect(() => {
+    setCurrentJob(job);
+  }, [job]);
 
   // Function to fetch job progress
   const fetchJobProgress = async () => {
@@ -74,6 +80,25 @@ export function JobCard({
       console.error("Error fetching job progress:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Function to fetch job data (for owner updates)
+  const fetchJobData = async () => {
+    try {
+      const response = await fetch(`/api/jobs/${job.id}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // Update the local job state with fresh data
+        setCurrentJob({
+          ...result.data,
+          // Preserve the businessFunctionName since it might not be included in the API response
+          businessFunctionName: result.data.businessFunctionName || job.businessFunctionName
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching job data:", error);
     }
   };
 
@@ -109,6 +134,31 @@ export function JobCard({
     };
   }, [job.id]);
 
+  // Listen for job owner update events
+  useEffect(() => {
+    const handleOwnerUpdate = (e: CustomEvent<{ jobId: string }>) => {
+      // Check if this is the job that needs to be updated
+      if (e.detail.jobId === job.id) {
+        console.log(`Updating owner for job ${job.id}`);
+        fetchJobData();
+      }
+    };
+
+    // Add event listener
+    window.addEventListener(
+      'job-owner-update', 
+      handleOwnerUpdate as EventListener
+    );
+    
+    // Clean up on unmount
+    return () => {
+      window.removeEventListener(
+        'job-owner-update', 
+        handleOwnerUpdate as EventListener
+      );
+    };
+  }, [job.id]);
+
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No due date";
@@ -122,7 +172,7 @@ export function JobCard({
 
   // Get owner name
   const getOwnerName = () => {
-    const nextTaskId = job.nextTaskId;
+    const nextTaskId = currentJob.nextTaskId;
     if (nextTaskId && taskOwnerMap && taskOwnerMap[nextTaskId]) {
       return taskOwnerMap[nextTaskId];
     }
@@ -131,12 +181,12 @@ export function JobCard({
 
   // Get task count
   const getTaskCount = () => {
-    return `#${job.id.slice(0, 2)}, ${taskCounts.completed} done`;
+    return `${taskCounts.completed} tasks done`;
   };
 
   // Get function color
   const getFunctionColor = () => {
-    const functionName = job.businessFunctionName?.toLowerCase() || "";
+    const functionName = currentJob.businessFunctionName?.toLowerCase() || "";
     if (functionName.includes("product")) return "bg-orange-100 text-orange-800";
     if (functionName.includes("design")) return "bg-green-100 text-green-800";
     if (functionName.includes("engineering")) return "bg-blue-100 text-blue-800";
@@ -149,7 +199,7 @@ export function JobCard({
       className={`bg-white border rounded-md shadow-sm ${
         isSelected ? "ring-2 ring-primary" : ""
       }`}
-      onClick={() => onOpenTasksSidebar(job)}
+      onClick={() => onOpenTasksSidebar(currentJob)}
     >
       <div className="p-4 cursor-pointer">
         {/* Top section with checkbox, function name, and owner */}
@@ -158,12 +208,12 @@ export function JobCard({
             <div onClick={(e) => e.stopPropagation()}>
               <Checkbox
                 checked={isSelected}
-                onCheckedChange={(value) => onSelect(job.id, !!value)}
+                onCheckedChange={(value) => onSelect(currentJob.id, !!value)}
                 aria-label="Select job"
               />
             </div>
             <span className={`px-2 py-1 text-xs font-medium rounded ${getFunctionColor()}`}>
-              {job.businessFunctionName || "No function"}
+              {currentJob.businessFunctionName || "No function"}
             </span>
           </div>
           <span className="text-sm font-medium">
@@ -173,14 +223,14 @@ export function JobCard({
         
         {/* Job title */}
         <div className="mb-6 pl-6">
-          <h3 className="text-base font-semibold">{job.title}</h3>
+          <h3 className="text-base font-semibold">{currentJob.title}</h3>
         </div>
         
         {/* Bottom section with task count, due date, and progress */}
         <div className="flex items-center justify-between pl-6">
           <div className="space-y-1">
             <p className="text-sm text-gray-500">{getTaskCount()}</p>
-            <p className="text-sm text-gray-500">Due date: {formatDate(job.dueDate)}</p>
+            <p className="text-sm text-gray-500">Due date: {formatDate(currentJob.dueDate)}</p>
           </div>
           
           <div className="relative w-14 h-14">
@@ -219,7 +269,7 @@ export function JobCard({
           className="h-8 w-8" 
           onClick={(e) => {
             e.stopPropagation();
-            onEdit(job);
+            onEdit(currentJob);
           }}
         >
           <Edit className="h-4 w-4" />
@@ -236,12 +286,12 @@ export function JobCard({
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete the
-                job "{job.title}" and remove it from our servers.
+                job "{currentJob.title}" and remove it from our servers.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onDelete(job.id)}>
+              <AlertDialogAction onClick={() => onDelete(currentJob.id)}>
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>

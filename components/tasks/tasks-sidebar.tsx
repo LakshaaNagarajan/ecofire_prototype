@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { NextTaskSelector } from "./next-task-selector";
 import { TaskProvider } from "@/hooks/task-context"; // Import the TaskProvider
 import { TaskCard } from "./tasks-card"; // Make sure to import the updated TaskCard
+import { useTaskContext } from "@/hooks/task-context";
 
 // Owner interface
 interface Owner {
@@ -49,6 +50,7 @@ export function TasksSidebar({
   const [nextTaskId, setNextTaskId] = useState<string | undefined>(undefined);
 
   const { toast } = useToast();
+  const { refreshJobOwner } = useTaskContext();
 
   // Fetch owners from API
   useEffect(() => {
@@ -232,11 +234,11 @@ export function TasksSidebar({
 
   const handleNextTaskChange = async (taskId: string): Promise<void> => {
     if (!selectedJob) return;
-
+  
     try {
       // Update the job with the new next task ID
       const taskIdToSave = taskId === "none" ? null : taskId;
-
+  
       const response = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",
         headers: {
@@ -244,14 +246,14 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ nextTaskId: taskIdToSave }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`Server responded with status: ${response.status}`);
       }
-
+  
       // Update local state
       setNextTaskId(taskIdToSave || undefined);
-
+  
       // Update isNextTask flag for all tasks
       setTasks(
         tasks.map((task) => ({
@@ -259,12 +261,13 @@ export function TasksSidebar({
           isNextTask: task.id === taskIdToSave,
         }))
       );
-
-      // Call onRefreshJobs to trigger a refresh of all jobs data
+  
+      // Set the flag in the parent component to indicate a refresh is needed
+      // But don't actually refresh yet - wait until sidebar is closed
       if (typeof onRefreshJobs === "function") {
         onRefreshJobs();
       }
-
+  
       toast({
         title: "Success",
         description: "Next task updated successfully",
@@ -278,13 +281,14 @@ export function TasksSidebar({
       });
     }
   };
+  
 
   const updateJobNextTask = async (taskId: string): Promise<void> => {
     if (!selectedJob) return;
-
+  
     try {
       const taskIdToSave = taskId === "none" ? null : taskId;
-
+  
       const response = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",
         headers: {
@@ -292,13 +296,13 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ nextTaskId: taskIdToSave }),
       });
-
+  
       const result = await response.json();
-
+  
       if (result.success) {
         // Update local state
         setNextTaskId(taskIdToSave || undefined);
-
+  
         // Update isNextTask flag for all tasks
         setTasks(
           tasks.map((task) => ({
@@ -306,6 +310,11 @@ export function TasksSidebar({
             isNextTask: task.id === taskIdToSave,
           }))
         );
+        
+        // Set flag for refresh on close
+        if (typeof onRefreshJobs === "function") {
+          onRefreshJobs();
+        }
       } else {
         throw new Error(result.error || "Failed to update next task");
       }
@@ -314,7 +323,7 @@ export function TasksSidebar({
       throw error;
     }
   };
-
+  
   const handleTaskSubmit = async (taskData: Partial<Task>) => {
     try {
       // Make sure tags is always defined as an array

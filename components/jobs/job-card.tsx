@@ -105,7 +105,7 @@ export function JobCard({
 
   // Get task count
   const getTaskCount = () => {
-    return `#${job.id.slice(0, 2)}, ${taskCounts.completed} done`;
+    return `${taskCounts.completed} tasks done`;
   };
 
   // Get function color

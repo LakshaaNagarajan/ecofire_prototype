@@ -399,6 +399,13 @@ export default function JobsPage() {
   const handleFilterChange = (filters: Record<string, any>) => {
     setActiveFilters(filters);
     
+    if (Object.keys(filters).length === 0) {
+      // If no filters are active, show all jobs
+      setFilteredActiveJobs(activeJobs);
+      setFilteredCompletedJobs(completedJobs);
+      return;
+    }
+    
     // Filter active jobs
     const filteredActive = activeJobs.filter(job => {
       return matchesFilters(job, filters);
@@ -693,8 +700,8 @@ export default function JobsPage() {
           />
         )}
 
-        {/* Only show completed jobs section if there are any to display or isDone filter is active */}
-        {(filteredCompletedJobs.length > 0 || activeFilters.isDone === true) && (
+        {/* Show completed jobs section if there are any to display or if no filters are active */}
+        {(filteredCompletedJobs.length > 0 || activeFilters.isDone === true || Object.keys(activeFilters).length === 0) && (
           <>
             <div className="mt-16 mb-6 flex justify-between items-center">
               <h2 className="text-2xl font-bold">Completed Jobs</h2>

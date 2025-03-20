@@ -148,50 +148,128 @@ export function NextTasks({
           className="overflow-hidden hover:shadow-md transition-shadow w-full"
         >
           <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              {/* Checkbox */}
-              <div className="pt-1">
-                <Checkbox
-                  checked={task.completed === true}
-                  onCheckedChange={(value) => onComplete(task._id, !!value)}
-                  aria-label="Mark as completed"
-                />
+            <div className="flex flex-col">
+              {/* Top row with checkbox, title, and action buttons */}
+              <div className="flex items-start gap-3 mb-5">
+                {/* Checkbox */}
+                <div className="pt-1">
+                  <Checkbox
+                    checked={task.completed === true}
+                    onCheckedChange={(value) => onComplete(task._id, !!value)}
+                    aria-label="Mark as completed"
+                  />
+                </div>
+
+                {/* Content - title and job */}
+                <div
+                  className="flex-1 cursor-pointer group"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewTask(task);
+                  }}
+                >
+                  {/* Task title */}
+                  <div className="mb-3 flex justify-between items-start">
+                    <div className="flex items-center">
+                      <h3 className="text-base font-semibold group-hover:text-primary transition-colors">
+                        {task.title}
+                      </h3>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+
+                  {/* Parent job info */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Briefcase className="h-3 w-3 mr-1" />
+                      <span>{getJobTitle(task.jobId)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex">
+                  {onAddToCalendar && (
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="h-8 mr-2 px-2 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCalendar(task);
+                      }}
+                      title="Add to calendar"
+                    >
+                      <Calendar className="h-4 w-4" /> Add to Calender
+                    </Button>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    {/* Notes button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewTask(task);
+                      }}
+                      title="View notes"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+
+                    {onEditTask && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditTask(task);
+                        }}
+                        title="Edit task"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+
+                    {onDeleteTask && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (
+                            window.confirm(
+                              "Are you sure you want to delete this task?"
+                            )
+                          ) {
+                            onDeleteTask(task._id);
+                          }
+                        }}
+                        title="Delete task"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* Content */}
-              <div
-                className="flex-1 cursor-pointer group"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewTask(task);
-                }}
-              >
-                {/* Task title */}
-                <div className="mb-5 flex justify-between items-start">
-                  <div className="flex items-center">
-                    <h3 className="text-base font-semibold group-hover:text-primary transition-colors">
-                      {task.title}
-                    </h3>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-
-                {/* Parent job info */}
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Briefcase className="h-3 w-3 mr-1" />
-                    <span>{getJobTitle(task.jobId)}</span>
-                  </div>
-                </div>
-
-                {/* Task details */}
-                <div className="flex flex-wrap gap-4 text-sm">
+              {/* Bottom row with business function and task details */}
+              <div className="flex justify-between items-center gap-16 pl-4">
+                {/* Business function badge on left */}
+                <div>
                   {getBusinessFunctionName(task.jobId) && (
                     <Badge variant="secondary">
                       {getBusinessFunctionName(task.jobId)}
                     </Badge>
                   )}
+                </div>
 
+                {/* Task details on right */}
+                <div className="flex flex-wrap gap-4 text-sm">
                   {/* Focus Level */}
                   {task.focusLevel && (
                     <div className="flex items-center">
@@ -201,13 +279,15 @@ export function NextTasks({
                         )}`}
                         fill="currentColor"
                       />
-                      <span className="text-sm">Focus: {task.focusLevel}</span>
+                      <span className="text-sm">
+                        Focus: {task.focusLevel}
+                      </span>
                     </div>
                   )}
 
                   {/* Joy Level */}
                   {task.joyLevel && (
-                    <div className="flex items-center ml-4">
+                    <div className="flex items-center">
                       <Smile
                         className={`h-4 w-4 mr-1 ${getJoyLevelColor(
                           task.joyLevel
@@ -229,7 +309,9 @@ export function NextTasks({
                   {task.requiredHours !== undefined && (
                     <div className="flex items-center text-muted-foreground">
                       <Clock className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{task.requiredHours} hrs</span>
+                      <span className="text-sm">
+                        {task.requiredHours} hrs
+                      </span>
                     </div>
                   )}
                   {/* Owner */}
@@ -237,77 +319,10 @@ export function NextTasks({
                     <div className="h-6 w-6 rounded-full bg-secondary overflow-hidden flex items-center justify-center text-xs font-medium mr-2">
                       {getOwnerName(task.owner).charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm">{getOwnerName(task.owner)}</span>
+                    <span className="text-sm">
+                      {getOwnerName(task.owner)}
+                    </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex">
-                {onAddToCalendar && (
-                  <Button
-                    variant="ghost"
-                    size="default"
-                    className="h-8 mr-2 px-2 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddToCalendar(task);
-                    }}
-                    title="Add to calendar"
-                  >
-                    <Calendar className="h-4 w-4" /> Add to Calender
-                  </Button>
-                )}
-                <div className="flex flex-col gap-2">
-                  {/* Notes button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewTask(task);
-                    }}
-                    title="View notes"
-                  >
-                    <FileText className="h-4 w-4" />
-                  </Button>
-
-                  {onEditTask && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditTask(task);
-                      }}
-                      title="Edit task"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  )}
-
-                  {onDeleteTask && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 flex items-center justify-center text-muted-foreground hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (
-                          window.confirm(
-                            "Are you sure you want to delete this task?"
-                          )
-                        ) {
-                          onDeleteTask(task._id);
-                        }
-                      }}
-                      title="Delete task"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
               </div>
             </div>

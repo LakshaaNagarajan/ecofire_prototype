@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import type { Task } from "@/lib/models/task.model";
 import type { Jobs } from "@/lib/models/job.model";
 
-export default function DashboardPage() {
+export default function TaskFeedView() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [jobs, setJobs] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);

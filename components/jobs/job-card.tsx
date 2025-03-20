@@ -45,42 +45,68 @@ export function JobCard({
   const [loading, setLoading] = useState<boolean>(true);
   const [taskCounts, setTaskCounts] = useState<TaskCounts>({ total: 0, completed: 0 });
 
-  // Fetch progress data when the component mounts
-  useEffect(() => {
-    const fetchJobProgress = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/jobs/progress?ids=${job.id}`);
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-          setProgress(result.data[job.id] || 0);
-        }
-        
-        // Also fetch task counts
-        const countsResponse = await fetch('/api/jobs/progress', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ jobId: job.id }),
-        });
-        
-        const countsResult = await countsResponse.json();
-        
-        if (countsResult.success && countsResult.data) {
-          setTaskCounts(countsResult.data);
-        }
-      } catch (error) {
-        console.error("Error fetching job progress:", error);
-      } finally {
-        setLoading(false);
+  // Function to fetch job progress
+  const fetchJobProgress = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/jobs/progress?ids=${job.id}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        setProgress(result.data[job.id] || 0);
       }
-    };
+      
+      // Also fetch task counts
+      const countsResponse = await fetch('/api/jobs/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ jobId: job.id }),
+      });
+      
+      const countsResult = await countsResponse.json();
+      
+      if (countsResult.success && countsResult.data) {
+        setTaskCounts(countsResult.data);
+      }
+    } catch (error) {
+      console.error("Error fetching job progress:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Initial data fetch
+  useEffect(() => {
     if (job.id) {
       fetchJobProgress();
     }
+  }, [job.id]);
+
+  // Listen for job progress update events
+  useEffect(() => {
+    const handleProgressUpdate = (e: CustomEvent<{ jobId: string }>) => {
+      // Check if this is the job that needs to be updated
+      if (e.detail.jobId === job.id) {
+        console.log(`Updating progress for job ${job.id}`);
+        fetchJobProgress();
+      }
+    };
+
+    // Add event listener
+    window.addEventListener(
+      'job-progress-update', 
+      handleProgressUpdate as EventListener
+    );
+    
+    // Clean up on unmount
+    return () => {
+      window.removeEventListener(
+        'job-progress-update', 
+        handleProgressUpdate as EventListener
+      );
+    };
   }, [job.id]);
 
   // Format date
@@ -105,7 +131,7 @@ export function JobCard({
 
   // Get task count
   const getTaskCount = () => {
-    return `${taskCounts.completed} tasks done`;
+    return `#${job.id.slice(0, 2)}, ${taskCounts.completed} done`;
   };
 
   // Get function color

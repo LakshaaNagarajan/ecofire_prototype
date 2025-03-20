@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Task, FocusLevel, JoyLevel } from "./types";
 import { Badge } from "@/components/ui/badge";
+import { useTaskContext } from "@/hooks/task-context"; // Import the task context
 
 interface TaskCardProps {
     task: Task;
@@ -34,6 +35,7 @@ export function TaskCard({
     ownerMap
 }: TaskCardProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const { refreshJobProgress } = useTaskContext(); // Use the task context
 
     // Format the date
     const formatDate = (dateString?: string | Date) => {
@@ -52,30 +54,20 @@ export function TaskCard({
         return ownerMap[task.owner] || "Not assigned";
     };
 
-    // Get badge colors for focus and joy levels
-    const getFocusLevelColor = () => {
-        const colors = {
-            [FocusLevel.High]: "bg-red-100 text-red-800",
-            [FocusLevel.Medium]: "bg-orange-100 text-orange-800",
-            [FocusLevel.Low]: "bg-green-100 text-green-800",
-        };
-        return task.focusLevel ? colors[task.focusLevel] : "bg-gray-100 text-gray-800";
-    };
-
-    const getJoyLevelColor = () => {
-        const colors = {
-            [JoyLevel.High]: "bg-green-100 text-green-800",
-            [JoyLevel.Medium]: "bg-blue-100 text-blue-800",
-            [JoyLevel.Low]: "bg-purple-100 text-purple-800",
-        };
-        return task.joyLevel ? colors[task.joyLevel] : "bg-gray-100 text-gray-800";
-    };
-
     // Get border color based on next task and completion status
     const getBorderClasses = () => {
         if (task.isNextTask) return "border-l-4 border border-orange-500 bg-white";
         if (task.completed) return "border border-gray-200 bg-gray-50";
         return "border border-gray-200 bg-white";
+    };
+
+    // Handle task completion with progress update
+    const handleTaskComplete = async (value: boolean) => {
+        // Call the original onComplete handler
+        await onComplete(task.id, value);
+        
+        // Trigger a refresh of the job progress
+        refreshJobProgress(task.jobId);
     };
 
     return (
@@ -86,11 +78,11 @@ export function TaskCard({
         >
             <div className="p-3">
                 <div className="flex items-start gap-3">
-                    {/* Checkbox */}
+                    {/* Checkbox - now using our new handler */}
                     <div className="pt-1">
                         <Checkbox
                             checked={task.completed}
-                            onCheckedChange={(value) => onComplete(task.id, !!value)}
+                            onCheckedChange={(value) => handleTaskComplete(!!value)}
                             aria-label="Mark as completed"
                         />
                     </div>

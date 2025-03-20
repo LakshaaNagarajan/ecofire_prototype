@@ -16,7 +16,8 @@ import { Task } from "./types";
 import { Job } from "@/components/jobs/table/columns";
 import { useToast } from "@/hooks/use-toast";
 import { NextTaskSelector } from "./next-task-selector";
-import { TaskCards } from "./table/task-grid"; // Import our new TaskCards component
+import { TaskProvider } from "@/hooks/task-context"; // Import the TaskProvider
+import { TaskCard } from "./tasks-card"; // Make sure to import the updated TaskCard
 
 // Owner interface
 interface Owner {
@@ -208,6 +209,10 @@ export function TasksSidebar({
         setTasks(
           tasks.map((task) => (task.id === id ? { ...task, completed } : task))
         );
+        
+        // No need to manually refresh job progress here
+        // The TaskCard will trigger the event via the context
+        
       } else {
         toast({
           title: "Error",
@@ -350,6 +355,12 @@ export function TasksSidebar({
           // Add task ID to job's tasks array
           if (selectedJob) {
             await updateJobTasks([...tasks.map((t) => t.id), newTask.id]);
+            
+            // Trigger a refresh of the job progress since we added a new task
+            const event = new CustomEvent('job-progress-update', { 
+              detail: { jobId: selectedJob.id } 
+            });
+            window.dispatchEvent(event);
           }
 
           setTasks([...tasks, newTask]);
@@ -394,6 +405,14 @@ export function TasksSidebar({
             completed: result.data.completed,
             isNextTask: result.data._id === nextTaskId,
           };
+
+          // If the task completion status changed, trigger a progress update
+          if (currentTask.completed !== updatedTask.completed && selectedJob) {
+            const event = new CustomEvent('job-progress-update', { 
+              detail: { jobId: selectedJob.id } 
+            });
+            window.dispatchEvent(event);
+          }
 
           setTasks(
             tasks.map((task) =>
@@ -450,6 +469,16 @@ export function TasksSidebar({
     return null;
   }
 
+  // Sort tasks to show the next task first
+  const sortedTasks = [...tasks].sort((a, b) => {
+    // If a is the next task, it comes first
+    if (a.isNextTask) return -1;
+    // If b is the next task, it comes first
+    if (b.isNextTask) return 1;
+    // Otherwise, keep the original order
+    return 0;
+  });
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -457,80 +486,92 @@ export function TasksSidebar({
           className="sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl overflow-y-auto"
           side="right"
         >
-          <SheetHeader className="mb-4">
-            <SheetTitle>Job Tasks</SheetTitle>
-            <SheetDescription>Manage tasks for this job</SheetDescription>
-          </SheetHeader>
+          {/* Wrap the content with the TaskProvider */}
+          <TaskProvider>
+            <SheetHeader className="mb-4">
+              <SheetTitle>Job Tasks</SheetTitle>
+              <SheetDescription>Manage tasks for this job</SheetDescription>
+            </SheetHeader>
 
-          {/* Job Details Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>{selectedJob.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {selectedJob.notes && (
-                <div>
-                  <p className="text-sm font-medium">Notes:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedJob.notes}
-                  </p>
-                </div>
-              )}
-              {selectedJob.businessFunctionName && (
-                <div>
-                  <p className="text-sm font-medium">Business Function:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedJob.businessFunctionName}
-                  </p>
-                </div>
-              )}
-              {selectedJob.dueDate && (
-                <div>
-                  <p className="text-sm font-medium">Due Date:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(selectedJob.dueDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {/* Job Details Card */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>{selectedJob.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {selectedJob.notes && (
+                  <div>
+                    <p className="text-sm font-medium">Notes:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedJob.notes}
+                    </p>
+                  </div>
+                )}
+                {selectedJob.businessFunctionName && (
+                  <div>
+                    <p className="text-sm font-medium">Business Function:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedJob.businessFunctionName}
+                    </p>
+                  </div>
+                )}
+                {selectedJob.dueDate && (
+                  <div>
+                    <p className="text-sm font-medium">Due Date:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(selectedJob.dueDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Next Task Selector */}
-          {tasks.length > 0 && (
-            <NextTaskSelector
-              tasks={tasks}
-              onNextTaskChange={handleNextTaskChange}
-              currentNextTaskId={nextTaskId}
-            />
-          )}
-
-          {/* Add Task Button */}
-          <div className="mb-4">
-            <Button onClick={handleAddTask} className="w-full">
-              <Plus className="h-4 w-4 mr-2" /> Add Task
-            </Button>
-          </div>
-
-          {/* Tasks Cards (replacing Tasks Table) */}
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <p>Loading tasks...</p>
-            </div>
-          ) : (
-            <div className="mt-6">
-              <TaskCards
-                data={tasks}
-                onEdit={handleEditTask}
-                onDelete={handleDeleteTask}
-                onComplete={handleCompleteTask}
-                ownerMap={ownerMap}
+            {/* Next Task Selector */}
+            {tasks.length > 0 && (
+              <NextTaskSelector
+                tasks={tasks}
+                onNextTaskChange={handleNextTaskChange}
+                currentNextTaskId={nextTaskId}
               />
+            )}
+
+            {/* Add Task Button */}
+            <div className="mb-4">
+              <Button onClick={handleAddTask} className="w-full">
+                <Plus className="h-4 w-4 mr-2" /> Add Task
+              </Button>
             </div>
-          )}
+
+            {/* Tasks List */}
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <p>Loading tasks...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sortedTasks.length > 0 ? (
+                  sortedTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onEdit={handleEditTask}
+                      onDelete={handleDeleteTask}
+                      onComplete={handleCompleteTask}
+                      ownerMap={ownerMap}
+                    />
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-gray-500 border rounded-md">
+                    No tasks for this job yet.
+                  </div>
+                )}
+              </div>
+            )}
+          </TaskProvider>
         </SheetContent>
       </Sheet>
 
@@ -545,4 +586,4 @@ export function TasksSidebar({
       />
     </>
   );
-}
+};

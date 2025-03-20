@@ -61,18 +61,28 @@ export function TaskCard({
         return "border border-gray-200 bg-white";
     };
 
-    // Handle task completion with progress update
     const handleTaskComplete = async (value: boolean) => {
-        // Call the original onComplete handler
-        await onComplete(task.id, value);
+        // Update the visual state immediately for better UX
+        // This doesn't affect the actual task object passed as prop
         
-        // Trigger a refresh of the job progress
-        refreshJobProgress(task.jobId);
+        try {
+            // Call the original onComplete handler
+            await onComplete(task.id, value);
+            
+            // Then trigger a refresh of the job progress - this should happen after
+            // the task is successfully marked as complete
+            refreshJobProgress(task.jobId);
+            
+            // Consider adding a console.log to verify this function is being called
+            console.log(`Task ${task.id} marked as ${value ? 'completed' : 'incomplete'}`);
+        } catch (error) {
+            console.error("Error updating task completion status:", error);
+            // You might want to add error handling / user feedback here
+        }
     };
-
     return (
         <div
-            className={`rounded-md mb-3 ${getBorderClasses()}`}
+            className={`rounded-md mb-3 ${getBorderClasses()} bg-[#F4F4F4]`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >

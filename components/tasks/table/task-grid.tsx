@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Task } from "../types";
 import { TaskCard } from "../tasks-card";
 
@@ -18,42 +18,56 @@ export function TaskCards({
   onComplete,
   ownerMap
 }: TaskCardsProps) {
-  // Sort data to push completed tasks to the bottom and next task to the top
-  const sortedData = useMemo(() => {
-    console.log("Sorting tasks, total:", data.length);
+  // Keep a sorted version of the tasks in local state
+  const [sortedTasks, setSortedTasks] = useState<Task[]>([]);
+  
+  // This function sorts tasks and should be used whenever tasks change
+  const sortTasks = (tasks: Task[]) => {
+    const activeTasks = tasks.filter(task => !task.completed);
+    const completedTasks = tasks.filter(task => task.completed);
     
-    // Debug: log completion status of each task
-    data.forEach(task => {
-      console.log(`Task: ${task.title}, Completed: ${task.completed}, Next: ${task.isNextTask}`);
-    });
-    
-    // Create a new array to avoid mutating the original data
-    return [...data].sort((a, b) => {
-      // First, sort by completion status
-      const aCompleted = Boolean(a.completed);
-      const bCompleted = Boolean(b.completed);
-      
-      if (aCompleted !== bCompleted) {
-        return aCompleted ? 1 : -1; // Completed tasks go to the bottom
-      }
-      
-      // If both have the same completion status, sort by next task status
-      // but only if they're not completed
-      if (!aCompleted && !bCompleted) {
-        const aIsNextTask = Boolean(a.isNextTask);
-        const bIsNextTask = Boolean(b.isNextTask);
-        
-        if (aIsNextTask !== bIsNextTask) {
-          return aIsNextTask ? -1 : 1; // Next task goes to the top
-        }
-      }
-      
-      // If both have the same completion and next task status, keep original order
+    // Sort active tasks to put next task at top
+    const sortedActiveTasks = [...activeTasks].sort((a, b) => {
+      if (a.isNextTask) return -1;
+      if (b.isNextTask) return 1;
       return 0;
     });
-  }, [data]); // Ensure this reruns when data changes
+    
+    // Return the combined array
+    return [...sortedActiveTasks, ...completedTasks];
+  };
   
-  if (!sortedData.length) {
+  // When data changes from parent, resort
+  useEffect(() => {
+    setSortedTasks(sortTasks(data));
+  }, [data]);
+  
+  // Custom complete handler that updates local state immediately
+  const handleComplete = async (id: string, completed: boolean) => {
+    // First update the local state for immediate feedback
+    setSortedTasks(current => {
+      // Update the specific task's completed status
+      const updatedTasks = current.map(task => 
+        task.id === id
+          ? {
+              ...task,
+              completed,
+              // If task is completed, it's no longer the next task
+              isNextTask: completed ? false : task.isNextTask
+            }
+          : task
+      );
+      
+      // Resort the tasks so completed ones move to the bottom
+      return sortTasks(updatedTasks);
+    });
+    
+    // Then call the actual handler (which updates the server)
+    await onComplete(id, completed);
+  };
+  
+  // Handle empty state
+  if (sortedTasks.length === 0) {
     return (
       <div className="p-8 text-center text-gray-500 border rounded-md">
         No tasks for this job yet.
@@ -61,29 +75,37 @@ export function TaskCards({
     );
   }
   
+  // Find index of first completed task
+  const firstCompletedIndex = sortedTasks.findIndex(task => task.completed);
+  const hasCompletedTasks = firstCompletedIndex !== -1;
+  const hasActiveTasks = sortedTasks.some(task => !task.completed);
+  
   return (
-    <div className="space-y-1">
-      <div className="space-y-3">
-        {sortedData.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onComplete={(id, completed) => {
-              // When a task is completed, call the handler
-              onComplete(id, completed);
-              
-              // If this is the next task and it's being completed,
-              // make sure to update the isNextTask property
-              if (task.isNextTask && completed) {
-                task.isNextTask = false; // Remove next task status if completed
-              }
-            }}
-            ownerMap={ownerMap}
-          />
-        ))}
-      </div>
+    <div className="space-y-4">
+      {sortedTasks.map((task, index) => {
+        // Add a separator before the first completed task
+        const isFirstCompletedTask = hasCompletedTasks && hasActiveTasks && index === firstCompletedIndex;
+        
+        return (
+          <Fragment key={task.id}>
+            {isFirstCompletedTask && (
+              <div className="pt-4 pb-2 border-t mt-6">
+                <div className="text-sm text-gray-500 font-medium">
+                  Completed Tasks ({sortedTasks.filter(t => t.completed).length})
+                </div>
+              </div>
+            )}
+            
+            <TaskCard
+              task={task}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onComplete={handleComplete}
+              ownerMap={ownerMap}
+            />
+          </Fragment>
+        );
+      })}
     </div>
   );
 }

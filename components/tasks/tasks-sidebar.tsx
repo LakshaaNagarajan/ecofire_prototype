@@ -198,22 +198,29 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ completed }),
       });
-
       const result = await response.json();
-
       if (result.success) {
         // If the completed task was the next task, we need to update the job
         if (completed && id === nextTaskId) {
           // Clear the next task since it's now completed
           await updateJobNextTask("none");
         }
-
-        setTasks(
-          tasks.map((task) => (task.id === id ? { ...task, completed } : task))
-        );
-        
-        // No need to manually refresh job progress here
-        // The TaskCard will trigger the event via the context
+  
+        // Use the function form of setState to ensure you're working with the latest state
+        setTasks(prevTasks => {
+          return prevTasks.map(task => {
+            if (task.id === id) {
+              // Update completed status and remove isNextTask if it's being completed
+              return { 
+                ...task, 
+                completed,
+                // If the task is being completed and it was the next task, remove that status
+                isNextTask: completed ? false : task.isNextTask 
+              };
+            }
+            return task;
+          });
+        });
         
       } else {
         toast({

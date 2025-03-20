@@ -196,7 +196,7 @@ export function JobCard({
   return (
     <div 
       style={{ width: '100%', minHeight: '180px' }}
-      className={`bg-white border rounded-md shadow-sm ${
+      className={`bg-[#F4F4F4] border rounded-md shadow-sm ${
         isSelected ? "ring-2 ring-primary" : ""
       }`}
       onClick={() => onOpenTasksSidebar(currentJob)}

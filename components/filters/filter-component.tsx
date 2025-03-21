@@ -112,7 +112,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             <Slider
               min={0}
               max={20}
-              step={1}
+              step={0.5}
               value={hoursRange}
               onValueChange={(value) => setHoursRange(value as [number, number])}
               onValueCommit={handleHoursChange}
@@ -131,7 +131,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
             <Target className="h-4 w-4 text-gray-500" />
-            <span>Focus Level</span>
+            <span>Focus</span>
             <ChevronDown className="h-4 w-4 text-gray-500" />
           </Button>
         </PopoverTrigger>
@@ -170,7 +170,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
             <Smile className="h-4 w-4 text-gray-500" />
-            <span>Joy Level</span>
+            <span>Joy</span>
             <ChevronDown className="h-4 w-4 text-gray-500" />
           </Button>
         </PopoverTrigger>
@@ -256,8 +256,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
         </PopoverContent>
       </Popover>
 
-      {/* Due Date Filter */}
-      <Popover>
+      {/* Due Date Filter -- commenting for now, todo: fix*/}
+      {/* <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
             <CalendarIcon className="h-4 w-4 text-gray-500" />
@@ -273,7 +273,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
             initialFocus
           />
         </PopoverContent>
-      </Popover>
+      </Popover> */}
 
       {/* Clear All Filters Button - Only show if filters are applied */}
       {Object.keys(filters).length > 0 && (

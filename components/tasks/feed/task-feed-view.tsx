@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { NextTasks } from "@/components/tasks/feed/tasks";
 import { useToast } from "@/hooks/use-toast";
 import { TaskDialog } from "@/components/tasks/tasks-dialog";
+import FilterComponent from "@/components/filters/filter-component"; // Import the FilterComponent
 import {
   Dialog,
   DialogContent,
@@ -20,10 +21,14 @@ import type { Jobs } from "@/lib/models/job.model";
 
 export default function TaskFeedView() {
   const [tasks, setTasks] = useState<any[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<any[]>([]);
   const [jobs, setJobs] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [ownerMap, setOwnerMap] = useState<Record<string, string>>({});
   const [businessFunctionMap, setBusinessFunctionMap] = useState<Record<string, string>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+  const [owners, setOwners] = useState<{ _id: string; name: string }[]>([]);
+  const [businessFunctions, setBusinessFunctions] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
   
   // State for task dialog
@@ -85,12 +90,17 @@ export default function TaskFeedView() {
           
           if (bfResult.success && Array.isArray(bfResult.data)) {
             const bfMap: Record<string, string> = {};
+            const bfArray: { id: string; name: string }[] = [];
+            
             bfResult.data.forEach((bf: any) => {
               if (bf._id && bf.name) {
                 bfMap[bf._id] = bf.name;
+                bfArray.push({ id: bf._id, name: bf.name });
               }
             });
+            
             setBusinessFunctionMap(bfMap);
+            setBusinessFunctions(bfArray);
           }
         } catch (bfError) {
           console.error("Error fetching business functions:", bfError);
@@ -133,32 +143,112 @@ export default function TaskFeedView() {
     }
   };
 
+  // Function to fetch owners for filters
+  const fetchOwners = async () => {
+    try {
+      const response = await fetch('/api/owners');
+      const result = await response.json();
+      
+      let ownersData: { _id: string; name: string }[] = [];
+      let ownerMap: Record<string, string> = {};
+      
+      if (Array.isArray(result)) {
+        ownersData = result.map(owner => ({
+          _id: owner._id,
+          name: owner.name
+        }));
+        
+        result.forEach((owner) => {
+          if (owner._id && owner.name) {
+            ownerMap[owner._id] = owner.name;
+          }
+        });
+      } else if (result.data && Array.isArray(result.data)) {
+        ownersData = result.data.map((owner: any) => ({
+          _id: owner._id,
+          name: owner.name
+        }));
+        
+        result.data.forEach((owner: any) => {
+          if (owner._id && owner.name) {
+            ownerMap[owner._id] = owner.name;
+          }
+        });
+      }
+      
+      setOwners(ownersData);
+      setOwnerMap(ownerMap);
+      
+      return ownersData;
+    } catch (error) {
+      console.error("Error fetching owners:", error);
+      return [];
+    }
+  };
+
+  // Handler for filter changes
+  const handleFilterChange = (filters: Record<string, any>) => {
+    setActiveFilters(filters);
+    
+    if (Object.keys(filters).length === 0) {
+      // If no filters are active, show all tasks
+      setFilteredTasks(tasks);
+      return;
+    }
+    
+    // Filter tasks based on the provided filters
+    const filtered = tasks.filter(task => {
+      let matches = true;
+      
+      // Get the associated job for this task
+      const job = task.jobId ? jobs[task.jobId] : null;
+      
+      // Process each filter
+      Object.entries(filters).forEach(([key, value]) => {
+        // Skip empty values or "any" values
+        if (value === "" || value === null || value === undefined || value === "any") return;
+        
+        switch (key) {
+          // Task filters
+          case 'focusLevel':
+            if (task.focusLevel !== value) matches = false;
+            break;
+          case 'joyLevel':
+            if (task.joyLevel !== value) matches = false;
+            break;
+          case 'owner':
+            if (task.owner !== value) matches = false;
+            break;
+          case 'minHours':
+            if (!task.requiredHours || task.requiredHours < value) matches = false;
+            break;
+          case 'maxHours':
+            if (!task.requiredHours || task.requiredHours > value) matches = false;
+            break;
+          case 'dueDate':
+            if (!task.date || new Date(task.date) > new Date(value)) matches = false;
+            break;
+            
+          // Job filters
+          case 'businessFunctionId':
+            if (!job || job.businessFunctionId !== value) matches = false;
+            break;
+        }
+      });
+      
+      return matches;
+    });
+    
+    setFilteredTasks(filtered);
+  };
+
   // Fetch all necessary data: next tasks, jobs, and owners
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch owners for mapping
-        const ownersResponse = await fetch("/api/owners");
-        const ownersResult = await ownersResponse.json();
-
-        let ownerMap: Record<string, string> = {};
-
-        if (Array.isArray(ownersResult)) {
-          ownersResult.forEach((owner) => {
-            if (owner._id && owner.name) {
-              ownerMap[owner._id] = owner.name;
-            }
-          });
-        } else if (ownersResult.data && Array.isArray(ownersResult.data)) {
-          ownersResult.data.forEach((owner: any) => {
-            if (owner._id && owner.name) {
-              ownerMap[owner._id] = owner.name;
-            }
-          });
-        }
-
-        setOwnerMap(ownerMap);
+        // Fetch owners for mapping and filters
+        await fetchOwners();
 
         // Fetch next tasks
         const nextStepTasks = await fetchTasks();
@@ -167,6 +257,7 @@ export default function TaskFeedView() {
         console.log("Next step tasks:", nextStepTasks);
         
         setTasks(nextStepTasks);
+        setFilteredTasks(nextStepTasks);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
@@ -209,6 +300,18 @@ export default function TaskFeedView() {
               : task
           )
         );
+        
+        // Also update filtered tasks
+        setFilteredTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === id
+              ? {
+                  ...task,
+                  completed: true
+                }
+              : task
+          )
+        );
 
         // Also update the job to remove the next task reference
         // Find which job has this task as its next task
@@ -232,6 +335,9 @@ export default function TaskFeedView() {
         // Filter out the task after a brief delay
         setTimeout(() => {
           setTasks((prevTasks) =>
+            prevTasks.filter((task) => task._id !== id)
+          );
+          setFilteredTasks((prevTasks) =>
             prevTasks.filter((task) => task._id !== id)
           );
         }, 500);
@@ -286,6 +392,18 @@ export default function TaskFeedView() {
       if (result.success) {
         // Update local state
         setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === id
+              ? {
+                  ...task,
+                  completed: false
+                }
+              : task
+          )
+        );
+        
+        // Also update filtered tasks
+        setFilteredTasks((prevTasks) =>
           prevTasks.map((task) =>
             task._id === id
               ? {
@@ -354,12 +472,23 @@ export default function TaskFeedView() {
       const result = await response.json();
 
       if (result.success) {
-        // Update the task in the local state
+        // Update both tasks and filteredTasks in the local state
+        const updatedTask = { ...editingTask, ...taskData };
+        
         setTasks(prevTasks => 
           prevTasks.map(task => 
-            task._id === editingTask._id ? { ...task, ...taskData } : task
+            task._id === editingTask._id ? updatedTask : task
           )
         );
+        
+        setFilteredTasks(prevTasks => 
+          prevTasks.map(task => 
+            task._id === editingTask._id ? updatedTask : task
+          )
+        );
+        
+        // Apply filters again to ensure the updated task still matches the current filters
+        handleFilterChange(activeFilters);
         
         toast({
           title: "Success",
@@ -388,8 +517,9 @@ export default function TaskFeedView() {
       const result = await response.json();
 
       if (result.success) {
-        // Remove task from UI
+        // Remove task from both UI states
         setTasks((prevTasks) => prevTasks.filter((task) => task._id !== id));
+        setFilteredTasks((prevTasks) => prevTasks.filter((task) => task._id !== id));
 
         // Find any jobs that reference this task as nextTaskId and update them
         const jobsWithThisNextTask = Object.values(jobs).filter(
@@ -432,6 +562,10 @@ export default function TaskFeedView() {
       // Fetch next tasks based on job.nextTaskId
       const nextStepTasks = await fetchTasks();
       setTasks(nextStepTasks);
+      setFilteredTasks(nextStepTasks);
+      
+      // Re-apply current filters to the refreshed tasks
+      handleFilterChange(activeFilters);
     } catch (error) {
       console.error("Error refreshing next tasks:", error);
       toast({
@@ -446,10 +580,18 @@ export default function TaskFeedView() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="grid gap-6">
+      {/* Add the FilterComponent at the top */}
+      <FilterComponent
+        onFilterChange={handleFilterChange}
+        businessFunctions={businessFunctions}
+        owners={owners}
+        initialFilters={activeFilters}
+      />
+      
+      <div className="grid gap-6 mt-4">
         <div className="w-full">
           <NextTasks
-            tasks={tasks}
+            tasks={filteredTasks} // Use filtered tasks instead of all tasks
             jobs={jobs}
             onComplete={handleCompleteTask}
             onViewTask={handleViewNotes}

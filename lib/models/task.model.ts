@@ -22,7 +22,7 @@ export interface Task extends mongoose.Document {
   jobId: string;
   userId: string;
   completed: boolean;
-  nextTask: boolean; // New property to mark task as next
+  // nextTask: boolean; // New property to mark task as next
 }
 const TaskSchema = new mongoose.Schema<Task>({
   title: {
@@ -75,11 +75,11 @@ const TaskSchema = new mongoose.Schema<Task>({
     default: false,
     required: true
   },
-  nextTask: {
-    type: Boolean,
-    default: false,
-    required: true
-  }
+  // nextTask: {
+  //   type: Boolean,
+  //   default: false,
+  //   required: true
+  // }
 });
 
 // Create a compound index to ensure only one task per job is marked as next

@@ -10,14 +10,15 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, X } from "lucide-react";
-import { TasksTable } from "./table/tasks-table";
-import { columns } from "./table/columns";
+import { Plus } from "lucide-react";
 import { TaskDialog } from "./tasks-dialog";
 import { Task } from "./types";
 import { Job } from "@/components/jobs/table/columns";
 import { useToast } from "@/hooks/use-toast";
 import { NextTaskSelector } from "./next-task-selector";
+import { TaskProvider } from "@/hooks/task-context"; // Import the TaskProvider
+import { TaskCard } from "./tasks-card"; // Make sure to import the updated TaskCard
+import { useTaskContext } from "@/hooks/task-context";
 
 // Owner interface
 interface Owner {
@@ -49,6 +50,7 @@ export function TasksSidebar({
   const [nextTaskId, setNextTaskId] = useState<string | undefined>(undefined);
 
   const { toast } = useToast();
+  const { refreshJobOwner } = useTaskContext();
 
   // Fetch owners from API
   useEffect(() => {
@@ -196,19 +198,30 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ completed }),
       });
-
       const result = await response.json();
-
       if (result.success) {
         // If the completed task was the next task, we need to update the job
         if (completed && id === nextTaskId) {
           // Clear the next task since it's now completed
           await updateJobNextTask("none");
         }
-
-        setTasks(
-          tasks.map((task) => (task.id === id ? { ...task, completed } : task))
-        );
+  
+        // Use the function form of setState to ensure you're working with the latest state
+        setTasks(prevTasks => {
+          return prevTasks.map(task => {
+            if (task.id === id) {
+              // Update completed status and remove isNextTask if it's being completed
+              return { 
+                ...task, 
+                completed,
+                // If the task is being completed and it was the next task, remove that status
+                isNextTask: completed ? false : task.isNextTask 
+              };
+            }
+            return task;
+          });
+        });
+        
       } else {
         toast({
           title: "Error",
@@ -228,11 +241,11 @@ export function TasksSidebar({
 
   const handleNextTaskChange = async (taskId: string): Promise<void> => {
     if (!selectedJob) return;
-
+  
     try {
       // Update the job with the new next task ID
       const taskIdToSave = taskId === "none" ? null : taskId;
-
+  
       const response = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",
         headers: {
@@ -240,14 +253,14 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ nextTaskId: taskIdToSave }),
       });
-
+  
       if (!response.ok) {
         throw new Error(`Server responded with status: ${response.status}`);
       }
-
+  
       // Update local state
       setNextTaskId(taskIdToSave || undefined);
-
+  
       // Update isNextTask flag for all tasks
       setTasks(
         tasks.map((task) => ({
@@ -255,12 +268,13 @@ export function TasksSidebar({
           isNextTask: task.id === taskIdToSave,
         }))
       );
-
-      // Call onRefreshJobs to trigger a refresh of all jobs data
+  
+      // Set the flag in the parent component to indicate a refresh is needed
+      // But don't actually refresh yet - wait until sidebar is closed
       if (typeof onRefreshJobs === "function") {
         onRefreshJobs();
       }
-
+  
       toast({
         title: "Success",
         description: "Next task updated successfully",
@@ -274,13 +288,14 @@ export function TasksSidebar({
       });
     }
   };
+  
 
   const updateJobNextTask = async (taskId: string): Promise<void> => {
     if (!selectedJob) return;
-
+  
     try {
       const taskIdToSave = taskId === "none" ? null : taskId;
-
+  
       const response = await fetch(`/api/jobs/${selectedJob.id}`, {
         method: "PUT",
         headers: {
@@ -288,13 +303,13 @@ export function TasksSidebar({
         },
         body: JSON.stringify({ nextTaskId: taskIdToSave }),
       });
-
+  
       const result = await response.json();
-
+  
       if (result.success) {
         // Update local state
         setNextTaskId(taskIdToSave || undefined);
-
+  
         // Update isNextTask flag for all tasks
         setTasks(
           tasks.map((task) => ({
@@ -302,6 +317,11 @@ export function TasksSidebar({
             isNextTask: task.id === taskIdToSave,
           }))
         );
+        
+        // Set flag for refresh on close
+        if (typeof onRefreshJobs === "function") {
+          onRefreshJobs();
+        }
       } else {
         throw new Error(result.error || "Failed to update next task");
       }
@@ -310,7 +330,7 @@ export function TasksSidebar({
       throw error;
     }
   };
-
+  
   const handleTaskSubmit = async (taskData: Partial<Task>) => {
     try {
       // Make sure tags is always defined as an array
@@ -351,6 +371,12 @@ export function TasksSidebar({
           // Add task ID to job's tasks array
           if (selectedJob) {
             await updateJobTasks([...tasks.map((t) => t.id), newTask.id]);
+            
+            // Trigger a refresh of the job progress since we added a new task
+            const event = new CustomEvent('job-progress-update', { 
+              detail: { jobId: selectedJob.id } 
+            });
+            window.dispatchEvent(event);
           }
 
           setTasks([...tasks, newTask]);
@@ -395,6 +421,14 @@ export function TasksSidebar({
             completed: result.data.completed,
             isNextTask: result.data._id === nextTaskId,
           };
+
+          // If the task completion status changed, trigger a progress update
+          if (currentTask.completed !== updatedTask.completed && selectedJob) {
+            const event = new CustomEvent('job-progress-update', { 
+              detail: { jobId: selectedJob.id } 
+            });
+            window.dispatchEvent(event);
+          }
 
           setTasks(
             tasks.map((task) =>
@@ -468,80 +502,92 @@ export function TasksSidebar({
           className="sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl overflow-y-auto"
           side="right"
         >
-          <SheetHeader className="mb-4">
-            <SheetTitle>Job Tasks</SheetTitle>
-            <SheetDescription>Manage tasks for this job</SheetDescription>
-          </SheetHeader>
+          {/* Wrap the content with the TaskProvider */}
+          <TaskProvider>
+            <SheetHeader className="mb-4">
+              <SheetTitle>Job Tasks</SheetTitle>
+              <SheetDescription>Manage tasks for this job</SheetDescription>
+            </SheetHeader>
 
-          {/* Job Details Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>{selectedJob.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {selectedJob.notes && (
-                <div>
-                  <p className="text-sm font-medium">Notes:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedJob.notes}
-                  </p>
-                </div>
-              )}
-              {selectedJob.businessFunctionName && (
-                <div>
-                  <p className="text-sm font-medium">Business Function:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedJob.businessFunctionName}
-                  </p>
-                </div>
-              )}
-              {selectedJob.dueDate && (
-                <div>
-                  <p className="text-sm font-medium">Due Date:</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(selectedJob.dueDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            {/* Job Details Card */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>{selectedJob.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {selectedJob.notes && (
+                  <div>
+                    <p className="text-sm font-medium">Notes:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedJob.notes}
+                    </p>
+                  </div>
+                )}
+                {selectedJob.businessFunctionName && (
+                  <div>
+                    <p className="text-sm font-medium">Business Function:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedJob.businessFunctionName}
+                    </p>
+                  </div>
+                )}
+                {selectedJob.dueDate && (
+                  <div>
+                    <p className="text-sm font-medium">Due Date:</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(selectedJob.dueDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-          {/* Next Task Selector */}
-          {tasks.length > 0 && (
-            <NextTaskSelector
-              tasks={tasks}
-              onNextTaskChange={handleNextTaskChange}
-              currentNextTaskId={nextTaskId}
-            />
-          )}
+            {/* Next Task Selector */}
+            {tasks.length > 0 && (
+              <NextTaskSelector
+                tasks={tasks}
+                onNextTaskChange={handleNextTaskChange}
+                currentNextTaskId={nextTaskId}
+              />
+            )}
 
-          {/* Add Task Button */}
-          <div className="mb-4">
-            <Button onClick={handleAddTask} className="w-full">
-              <Plus className="h-4 w-4 mr-2" /> Add Task
-            </Button>
-          </div>
-
-          {/* Tasks Table */}
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <p>Loading tasks...</p>
+            {/* Add Task Button */}
+            <div className="mb-4">
+              <Button onClick={handleAddTask} className="w-full">
+                <Plus className="h-4 w-4 mr-2" /> Add Task
+              </Button>
             </div>
-          ) : (
-            <TasksTable
-              columns={columns(
-                handleEditTask,
-                handleDeleteTask,
-                handleCompleteTask,
-                ownerMap
-              )}
-              data={sortedTasks}
-            />
-          )}
+
+            {/* Tasks List */}
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <p>Loading tasks...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sortedTasks.length > 0 ? (
+                  sortedTasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      onEdit={handleEditTask}
+                      onDelete={handleDeleteTask}
+                      onComplete={handleCompleteTask}
+                      ownerMap={ownerMap}
+                    />
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-gray-500 border rounded-md">
+                    No tasks for this job yet.
+                  </div>
+                )}
+              </div>
+            )}
+          </TaskProvider>
         </SheetContent>
       </Sheet>
 
@@ -556,4 +602,4 @@ export function TasksSidebar({
       />
     </>
   );
-}
+};

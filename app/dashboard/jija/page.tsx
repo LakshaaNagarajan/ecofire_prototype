@@ -1,8 +1,10 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
 
 export default function Chat() {
+  const [systemPrompt, setSystemPrompt] = useState('');
   const {
     error,
     input,
@@ -13,6 +15,7 @@ export default function Chat() {
     reload,
     stop,
   } = useChat({
+    body: { systemPrompt },
     onFinish(message, { usage, finishReason }) {
       console.log('Usage', usage);
       console.log('FinishReason', finishReason);
@@ -54,15 +57,23 @@ export default function Chat() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <div className="fixed bottom-0 w-full max-w-md mb-8">
         <input
-          className="fixed bottom-0 w-full max-w-md p-2 mb-8 border border-gray-300 rounded shadow-xl"
-          value={input}
-          placeholder="Say something..."
-          onChange={handleInputChange}
-          disabled={status !== 'ready'}
+          className="w-full p-2 mb-2 border border-gray-300 rounded shadow-xl"
+          value={systemPrompt}
+          placeholder="Set system prompt..."
+          onChange={(e) => setSystemPrompt(e.target.value)}
         />
-      </form>
+        <form onSubmit={handleSubmit}>
+          <input
+            className="w-full p-2 border border-gray-300 rounded shadow-xl"
+            value={input}
+            placeholder="Say something..."
+            onChange={handleInputChange}
+            disabled={status !== 'ready'}
+          />
+        </form>
+      </div>
     </div>
   );
 }

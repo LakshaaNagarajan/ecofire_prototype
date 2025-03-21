@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, ChevronDown, Clock, Target, Smile, Users, Briefcase } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, Clock, Target, Smile, Users, Briefcase, X } from "lucide-react";
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -90,17 +90,57 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
     onFilterChange(newFilters);
   };
 
+  // Helper function to get business function name by ID
+  const getBusinessFunctionName = (id: string) => {
+    const bf = businessFunctions.find(bf => bf.id === id);
+    return bf ? bf.name : id;
+  };
+
+  // Helper function to get owner name by ID
+  const getOwnerName = (id: string) => {
+    const owner = owners.find(owner => owner._id === id);
+    return owner ? owner.name : id;
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2 mb-4">
       {/* Hours Required Filter */}
       <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
-            <Clock className="h-4 w-4 text-gray-500" />
-            <span>Hours Req.</span>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-          </Button>
-        </PopoverTrigger>
+        <div className="relative">
+          <PopoverTrigger asChild>
+            <Button 
+              variant={filters.minHours !== undefined && filters.maxHours !== undefined ? "default" : "outline"} 
+              size="sm" 
+              className="h-10 gap-1"
+            >
+              <Clock className="h-4 w-4" />
+              <span>
+                {(filters.minHours !== undefined && filters.maxHours !== undefined) 
+                  ? `${filters.minHours} - ${filters.maxHours}h` 
+                  : "Hours Req."}
+              </span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          {(filters.minHours !== undefined && filters.maxHours !== undefined) && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-5 w-5 p-0 absolute -top-2 -right-2 rounded-full bg-gray-200 hover:bg-gray-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                setHoursRange([0, 10]);
+                const newFilters = { ...filters };
+                delete newFilters.minHours;
+                delete newFilters.maxHours;
+                setFilters(newFilters);
+                onFilterChange(newFilters);
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
         <PopoverContent className="w-80 p-4">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -128,13 +168,34 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
       {/* Focus Level Filter */}
       <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
-            <Target className="h-4 w-4 text-gray-500" />
-            <span>Focus</span>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-          </Button>
-        </PopoverTrigger>
+        <div className="relative">
+          <PopoverTrigger asChild>
+            <Button 
+              variant={filters.focusLevel ? "default" : "outline"} 
+              size="sm" 
+              className="h-10 gap-1"
+            >
+              <Target className="h-4 w-4" />
+              <span>
+                {filters.focusLevel || "Focus"}
+              </span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          {filters.focusLevel && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-5 w-5 p-0 absolute -top-2 -right-2 rounded-full bg-gray-200 hover:bg-gray-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFilterChange('focusLevel', null);
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
         <PopoverContent className="w-56 p-2">
           <div className="flex flex-col">
             <Button 
@@ -167,13 +228,34 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
       {/* Joy Level Filter */}
       <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
-            <Smile className="h-4 w-4 text-gray-500" />
-            <span>Joy</span>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-          </Button>
-        </PopoverTrigger>
+        <div className="relative">
+          <PopoverTrigger asChild>
+            <Button 
+              variant={filters.joyLevel ? "default" : "outline"} 
+              size="sm" 
+              className="h-10 gap-1"
+            >
+              <Smile className="h-4 w-4" />
+              <span>
+                {filters.joyLevel || "Joy"}
+              </span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          {filters.joyLevel && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-5 w-5 p-0 absolute -top-2 -right-2 rounded-full bg-gray-200 hover:bg-gray-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFilterChange('joyLevel', null);
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
         <PopoverContent className="w-56 p-2">
           <div className="flex flex-col">
             <Button 
@@ -206,13 +288,36 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
       {/* Business Function Filter */}
       <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
-            <Briefcase className="h-4 w-4 text-gray-500" />
-            <span>Business Func.</span>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-          </Button>
-        </PopoverTrigger>
+        <div className="relative">
+          <PopoverTrigger asChild>
+            <Button 
+              variant={filters.businessFunctionId ? "default" : "outline"} 
+              size="sm" 
+              className="h-10 gap-1"
+            >
+              <Briefcase className="h-4 w-4" />
+              <span>
+                {filters.businessFunctionId 
+                  ? getBusinessFunctionName(filters.businessFunctionId)
+                  : "Business Func."}
+              </span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          {filters.businessFunctionId && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-5 w-5 p-0 absolute -top-2 -right-2 rounded-full bg-gray-200 hover:bg-gray-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFilterChange('businessFunctionId', null);
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
         <PopoverContent className="w-56 p-2">
           <div className="flex flex-col max-h-72 overflow-y-auto">
             {businessFunctions.map((bf) => (
@@ -232,13 +337,36 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
       {/* Owner Filter */}
       <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
-            <Users className="h-4 w-4 text-gray-500" />
-            <span>Owner</span>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
-          </Button>
-        </PopoverTrigger>
+        <div className="relative">
+          <PopoverTrigger asChild>
+            <Button 
+              variant={filters.owner ? "default" : "outline"} 
+              size="sm" 
+              className="h-10 gap-1"
+            >
+              <Users className="h-4 w-4" />
+              <span>
+                {filters.owner 
+                  ? getOwnerName(filters.owner)
+                  : "Owner"}
+              </span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          {filters.owner && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-5 w-5 p-0 absolute -top-2 -right-2 rounded-full bg-gray-200 hover:bg-gray-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFilterChange('owner', null);
+              }}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
         <PopoverContent className="w-56 p-2">
           <div className="flex flex-col max-h-72 overflow-y-auto">
             {owners.map((owner) => (
@@ -261,8 +389,23 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="h-10 gap-1 bg-gray-100">
             <CalendarIcon className="h-4 w-4 text-gray-500" />
-            <span>Due Date</span>
-            <ChevronDown className="h-4 w-4 text-gray-500" />
+            <span>
+              {filters.dueDate 
+                ? `Due: ${format(new Date(filters.dueDate), 'MMM d')}` 
+                : "Due Date"}
+            </span>
+            {filters.dueDate ? (
+              <X 
+                className="h-4 w-4 ml-1 hover:text-destructive" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDate(undefined);
+                  handleFilterChange('dueDate', null);
+                }}
+              />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-gray-500" />
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">

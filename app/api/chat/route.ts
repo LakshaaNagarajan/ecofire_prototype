@@ -6,7 +6,8 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   // Extract the `messages` from the body of the request
-  const { messages, id, systemPrompt } = await req.json();
+  const { messages, id, missionStatement } = await req.json();
+  const systemPrompt = "You are an elite business strategy consultant with decades of experience across multiple industries, specializing in guiding startups and small businesses from ideation through scaling. You are advising an entrepreneur whose business mission statement is '" + missionStatement+ "' based on cross-industry best practices.";
 
   console.log('chat id', id); // can be used for persisting the chat
 

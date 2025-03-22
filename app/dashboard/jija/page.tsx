@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
 
 export default function Chat() {
-  const [systemPrompt, setSystemPrompt] = useState('');
+  const [missionStatement, setMissionStatement] = useState('');
   const {
     error,
     input,
@@ -15,7 +15,7 @@ export default function Chat() {
     reload,
     stop,
   } = useChat({
-    body: { systemPrompt },
+    body: { missionStatement },
     onFinish(message, { usage, finishReason }) {
       console.log('Usage', usage);
       console.log('FinishReason', finishReason);
@@ -60,9 +60,9 @@ export default function Chat() {
       <div className="fixed bottom-0 w-full max-w-md mb-8">
         <input
           className="w-full p-2 mb-2 border border-gray-300 rounded shadow-xl"
-          value={systemPrompt}
-          placeholder="Set system prompt..."
-          onChange={(e) => setSystemPrompt(e.target.value)}
+          value={missionStatement}
+          placeholder="What is your mission statement?"
+          onChange={(e) => setMissionStatement(e.target.value)}
         />
         <form onSubmit={handleSubmit}>
           <input

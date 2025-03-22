@@ -19,9 +19,9 @@ export async function POST(req: Request) {
   const undoneJobs = allJobs
       .filter((job) => !job.isDone)
       .map((job) => job.title).map(item => `* ${item}`).join("\n");
-  console.log("chat id", id);
+  //console.log("chat id", id);
   const systemPrompt = systemPrompt_initial + undoneJobs;
-  console.log("systemPrompt", systemPrompt);
+  //console.log("systemPrompt", systemPrompt);
   try {
     // Call the language model
     const result = streamText({

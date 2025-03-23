@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { chatId: string } }
+  context: { params: { chatId: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -19,8 +19,8 @@ export async function GET(
       });
     }
 
-    // Access params as a synchronous object (it's already awaited by Next.js)
-    const { chatId } = params;
+    // Correctly extract chatId from context.params
+    const chatId = context.params.chatId;
     
     const chatService = new ChatService();
     const chatHistory = await chatService.getChatById(userId, chatId);

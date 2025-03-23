@@ -39,18 +39,4 @@ export async function POST(req: Request) {
     console.error("Error fetching jobs:", error);
     return new Response('Internal Server Error', { status: 500 });
   }
-
-  // Call the language model
-  const result = streamText({
-    model: openai('gpt-4o'),
-    system: systemPrompt,
-    messages,
-    async onFinish({ text, toolCalls, toolResults, usage, finishReason }) {
-      // implement your own logic here, e.g. for storing messages
-      // or recording token usage
-    },
-  });
-
-  // Respond with the stream
-  return result.toDataStreamResponse();
 }

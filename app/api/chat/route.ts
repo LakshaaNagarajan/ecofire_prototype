@@ -23,34 +23,27 @@ export async function POST(req: Request) {
   const systemPrompt = systemPrompt_initial + undoneJobs;
   //console.log("systemPrompt", systemPrompt);
   try {
+    const chatService = new ChatService();
+    
     // Call the language model
     const result = streamText({
       model: openai('gpt-4o'),
       system: systemPrompt,
       messages,
       async onFinish({ text, toolCalls, toolResults, usage, finishReason }) {
-        // implement your own logic here, e.g. for storing messages
-        // or recording token usage
+        // Store chat history
+        const allMessages = [
+          ...messages,
+          { role: 'assistant', content: text }
+        ];
+        await chatService.saveChatHistory(userId, id, allMessages);
       },
     });
+    
     // Respond with the stream
     return result.toDataStreamResponse();
   } catch (error) {
-    console.error("Error fetching jobs:", error);
+    console.error("Error:", error);
     return new Response('Internal Server Error', { status: 500 });
   }
-
-  // Call the language model
-  const result = streamText({
-    model: openai('gpt-4o'),
-    system: systemPrompt,
-    messages,
-    async onFinish({ text, toolCalls, toolResults, usage, finishReason }) {
-      // implement your own logic here, e.g. for storing messages
-      // or recording token usage
-    },
-  });
-
-  // Respond with the stream
-  return result.toDataStreamResponse();
 }

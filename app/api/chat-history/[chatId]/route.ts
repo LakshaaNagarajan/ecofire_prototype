@@ -17,7 +17,7 @@ export async function GET(
     }
 
     // Access chatId with await in Next.js 15
-    const { id: chatId } = await params;
+    const { chatId } = await params;
     
     const chatService = new ChatService();
     const chatHistory = await chatService.getChatById(userId, chatId);

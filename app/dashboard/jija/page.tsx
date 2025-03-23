@@ -100,8 +100,15 @@ export default function Chat() {
         setSelectedChatId(chatId);
         
         // Set the chat messages to continue the conversation
-        if (data.messages && data.messages.length > 0) {
-          setMessages(data.messages);
+        if (data && data.messages && data.messages.length > 0) {
+          // Create messages in the format expected by useChat
+          const formattedMessages = data.messages.map((msg: any, index: number) => ({
+            id: `msg-${index}`,
+            role: msg.role,
+            content: msg.content
+          }));
+          
+          setMessages(formattedMessages);
         }
       }
     } catch (error) {

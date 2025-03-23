@@ -29,10 +29,7 @@ export async function GET(
       );
     }
     
-    return NextResponse.json({
-      success: true,
-      data: chatHistory
-    });
+    return NextResponse.json(chatHistory);
   } catch (error) {
     console.error('Error in GET /api/chat-history/[chatId]:', error);
     return NextResponse.json(

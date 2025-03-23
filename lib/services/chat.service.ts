@@ -39,4 +39,16 @@ export class ChatService {
     await dbConnect();
     return await Chat.countDocuments({ userId });
   }
+  
+  async getChatById(userId: string, chatId: string) {
+    await dbConnect();
+    
+    const chat = await Chat.findOne({ userId, chatId }).lean();
+    
+    if (!chat) {
+      return null;
+    }
+    
+    return JSON.parse(JSON.stringify(chat));
+  }
 }

@@ -8,8 +8,9 @@ import { ChatService } from "@/lib/services/chat.service";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  // Extract the `messages` from the body of the request
+  // Extract the data from the body of the request
   const { messages, id, missionStatement } = await req.json();
+  const chatId = id || crypto.randomUUID(); // Use provided ID or generate a new one
   const systemPrompt_initial =
     'You are an elite business strategy consultant with decades of experience across multiple industries, specializing in guiding startups and small businesses from ideation through scaling. You are advising an entrepreneur whose business mission statement is "' +
     missionStatement +
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
       async onFinish({ text, toolCalls, toolResults, usage, finishReason }) {
         // Store chat history
         const allMessages = [...messages, { role: "assistant", content: text }];
-        await chatService.saveChatHistory(userId, id, allMessages);
+        await chatService.saveChatHistory(userId, chatId, allMessages);
       },
     });
 

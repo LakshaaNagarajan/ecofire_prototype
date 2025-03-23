@@ -29,6 +29,7 @@ export default function Chat() {
   const [hasMoreChats, setHasMoreChats] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const LIMIT = 3;
   const { userId } = useAuth();
 
@@ -41,7 +42,9 @@ export default function Chat() {
     messages,
     reload,
     stop,
+    setMessages,
   } = useChat({
+    id: selectedChatId || undefined,
     body: { missionStatement },
     onFinish(message, { usage, finishReason }) {
       console.log('Usage', usage);
@@ -87,6 +90,25 @@ export default function Chat() {
     setIsLoadingMore(false);
   };
 
+  const loadChatSession = async (chatId: string) => {
+    try {
+      const response = await fetch(`/api/chat-history/${chatId}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Set the selected chat ID
+        setSelectedChatId(chatId);
+        
+        // Set the chat messages to continue the conversation
+        if (data.messages && data.messages.length > 0) {
+          setMessages(data.messages);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading chat session:', error);
+    }
+  };
+
   useEffect(() => {
     fetchRecentChats();
   }, [userId]);
@@ -118,7 +140,15 @@ export default function Chat() {
             {recentChats.map((chat) => {
               const preview = getChatPreview(chat);
               return (
-                <div key={chat._id} className="border rounded-lg p-4 shadow-sm">
+                <div 
+                  key={chat._id} 
+                  className={`border rounded-lg p-4 shadow-sm cursor-pointer transition-colors ${
+                    selectedChatId === chat.chatId 
+                    ? 'bg-blue-50 border-blue-500' 
+                    : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => loadChatSession(chat.chatId)}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-sm text-gray-500">
                       {formatDate(chat.updatedAt)}

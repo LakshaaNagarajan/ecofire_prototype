@@ -19,7 +19,8 @@ export async function GET(
       });
     }
 
-    const chatId = params.chatId;
+    // Access params as a synchronous object (it's already awaited by Next.js)
+    const { chatId } = params;
     
     const chatService = new ChatService();
     const chatHistory = await chatService.getChatById(userId, chatId);

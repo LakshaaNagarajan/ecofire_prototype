@@ -22,15 +22,21 @@ export class ChatService {
     });
   }
   
-  async getRecentChats(userId: string, limit: number = 3) {
+  async getRecentChats(userId: string, limit: number = 3, skip: number = 0) {
     await dbConnect();
     
-    // Find the most recent chats for this user
+    // Find the most recent chats for this user with pagination support
     const recentChats = await Chat.find({ userId })
       .sort({ updatedAt: -1 })
+      .skip(skip)
       .limit(limit)
       .lean();
     
     return JSON.parse(JSON.stringify(recentChats));
+  }
+  
+  async getTotalChatCount(userId: string) {
+    await dbConnect();
+    return await Chat.countDocuments({ userId });
   }
 }

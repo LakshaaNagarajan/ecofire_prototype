@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { ChatService } from "@/lib/services/chat.service";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const { userId } = await auth();
     
@@ -16,10 +16,20 @@ export async function GET() {
       });
     }
 
-    const chatService = new ChatService();
-    const recentChats = await chatService.getRecentChats(userId, 3);
+    // Get pagination parameters from URL
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '3', 10);
+    const skip = parseInt(url.searchParams.get('skip') || '0', 10);
     
-    return NextResponse.json(recentChats);
+    const chatService = new ChatService();
+    const recentChats = await chatService.getRecentChats(userId, limit, skip);
+    const totalChats = await chatService.getTotalChatCount(userId);
+    
+    return NextResponse.json({
+      chats: recentChats,
+      total: totalChats,
+      hasMore: skip + recentChats.length < totalChats
+    });
   } catch (error) {
     console.error("Error fetching recent chats:", error);
     return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), {

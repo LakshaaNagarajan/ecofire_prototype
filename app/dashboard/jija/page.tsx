@@ -17,9 +17,19 @@ interface ChatSession {
   updatedAt: string;
 }
 
+interface ChatResponse {
+  chats: ChatSession[];
+  total: number;
+  hasMore: boolean;
+}
+
 export default function Chat() {
   const [missionStatement, setMissionStatement] = useState('');
   const [recentChats, setRecentChats] = useState<ChatSession[]>([]);
+  const [hasMoreChats, setHasMoreChats] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const LIMIT = 3;
   const { userId } = useAuth();
 
   const {
@@ -36,22 +46,45 @@ export default function Chat() {
     onFinish(message, { usage, finishReason }) {
       console.log('Usage', usage);
       console.log('FinishReason', finishReason);
-      fetchRecentChats(); // Refresh chats after a new chat is completed
+      // Reset pagination and fetch fresh chats
+      setPage(0);
+      fetchRecentChats(0); 
     },
   });
 
-  const fetchRecentChats = async () => {
+  const fetchRecentChats = async (pageToFetch = page) => {
     if (!userId) return;
     
     try {
-      const response = await fetch('/api/recent-chats');
+      const skip = pageToFetch * LIMIT;
+      const response = await fetch(`/api/recent-chats?limit=${LIMIT}&skip=${skip}`);
+      
       if (response.ok) {
-        const data = await response.json();
-        setRecentChats(data);
+        const data = await response.json() as ChatResponse;
+        
+        if (pageToFetch === 0) {
+          // First page - replace current chats
+          setRecentChats(data.chats);
+        } else {
+          // Additional pages - append to current chats
+          setRecentChats(prev => [...prev, ...data.chats]);
+        }
+        
+        setHasMoreChats(data.hasMore);
       }
     } catch (error) {
       console.error('Error fetching recent chats:', error);
     }
+  };
+
+  const loadMoreChats = async () => {
+    if (isLoadingMore || !hasMoreChats) return;
+    
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+    setPage(nextPage);
+    await fetchRecentChats(nextPage);
+    setIsLoadingMore(false);
   };
 
   useEffect(() => {
@@ -103,6 +136,19 @@ export default function Chat() {
               );
             })}
           </div>
+          
+          {/* Load More Button */}
+          {hasMoreChats && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={loadMoreChats}
+                disabled={isLoadingMore}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+              >
+                {isLoadingMore ? 'Loading...' : 'Load More Conversations'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

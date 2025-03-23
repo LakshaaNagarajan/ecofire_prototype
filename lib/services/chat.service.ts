@@ -21,4 +21,16 @@ export class ChatService {
       updatedAt: new Date()
     });
   }
+  
+  async getRecentChats(userId: string, limit: number = 3) {
+    await dbConnect();
+    
+    // Find the most recent chats for this user
+    const recentChats = await Chat.find({ userId })
+      .sort({ updatedAt: -1 })
+      .limit(limit)
+      .lean();
+    
+    return JSON.parse(JSON.stringify(recentChats));
+  }
 }

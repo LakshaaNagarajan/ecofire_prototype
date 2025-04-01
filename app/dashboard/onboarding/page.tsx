@@ -1,5 +1,8 @@
 "use client";
 
+import { Task } from "@/lib/models/task.model";
+
+
 import { useCompletion } from "@ai-sdk/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -59,9 +62,9 @@ export default function OnboardingPage() {
         });
       }
     },
-    onFinish(result, { usage, finishReason }) {
-      console.log("Usage", usage);
-      console.log("FinishReason", finishReason);
+    onFinish(result, completion) {
+      // console.log("Usage", usage);
+      // console.log("FinishReason", finishReason);
       console.log("Result content length:", result.length);
       // Add the completion to messages for display
       setMessages([...messages, { role: "assistant", content: result }]);
@@ -102,10 +105,10 @@ export default function OnboardingPage() {
         });
       }
     },
-    onFinish(result, { usage, finishReason }) {
-      console.log("Jobs usage", usage);
-      console.log("Jobs finishReason", finishReason);
-      console.log("Jobs result JSON:", result); // Added debugging output
+    onFinish(result, completion) {
+      // console.log("Jobs usage", usage);
+      // console.log("Jobs finishReason", finishReason);
+      // console.log("Jobs result JSON:", result); // Added debugging output
       // Add the completion to jobs messages for display
       setJobsMessages([
         ...jobsMessages,
@@ -503,7 +506,8 @@ export default function OnboardingPage() {
                         let jsonStr = jsonMatch[0];
                         jsonStr = jsonStr.replace(/'/g, '"');
                         const outcomeData = JSON.parse(jsonStr);
-
+                        // Fix escaped quotes in strings (like word"s)
+                        jsonStr = jsonStr.replace(/(\w)"(\w)/g, "$1'$2");
                         return (
                           <div className="space-y-4">
                             {Object.keys(outcomeData).map((key) => {
@@ -638,8 +642,9 @@ export default function OnboardingPage() {
                       if (jsonMatch) {
                         let jsonStr = jsonMatch[0];
                         jsonStr = jsonStr.replace(/'/g, '"');
+                        // Fix escaped quotes in strings (like word"s)
+                        jsonStr = jsonStr.replace(/(\w)"(\w)/g, "$1'$2");
                         const jobsData = JSON.parse(jsonStr);
-
                         return (
                           <div className="space-y-6">
                             {Object.keys(jobsData).map((key) => {
@@ -667,7 +672,7 @@ export default function OnboardingPage() {
                                           Tasks:
                                         </h5>
                                         <div className="pl-4 border-l-2 border-gray-200 space-y-2">
-                                          {job.tasks.map((task, index) => (
+                                          {job.tasks.map((task: Task, index: number) => (
                                             <div
                                               key={index}
                                               className="bg-gray-50 p-2 rounded"

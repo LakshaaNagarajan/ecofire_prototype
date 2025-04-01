@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, streamText } from "ai";
-import { ChatService } from "@/lib/services/chat.service";
-import { MissionService } from "@/lib/services/mission.service";
+import { BusinessInfoService } from "@/lib/services/business-info.service";
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,17 +36,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const chatId = crypto.randomUUID(); // Generate a new chat ID for this session
-    const chatService = new ChatService();
-    const missionService = new MissionService();
+    const chatId = crypto.randomUUID(); // Generate a new chat ID for this session (still needed for reference)
+    const businessInfoService = new BusinessInfoService();
 
-    // Update the mission with the business description
+    // Update the business info with the business description as mission statement
     try {
-      await missionService.updateMission(businessDescription);
-      console.log("Mission updated with business description");
-    } catch (missionError) {
-      console.error("Error updating mission:", missionError);
-      // Continue even if mission update fails
+      await businessInfoService.updateBusinessInfo(userId, {
+        missionStatement: businessDescription
+      });
+      console.log("Business info updated with mission statement");
+    } catch (updateError) {
+      console.error("Error updating business info:", updateError);
+      // Continue even if business info update fails
     }
 
     // Common system prompt for both steps
@@ -94,73 +95,67 @@ export async function POST(req: NextRequest) {
           system: systemPrompt,
           prompt: outcomePrompt,
           async onFinish({ text, usage, finishReason }) {
-            // Store chat history
-            const messages = [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: outcomePrompt },
-              { role: "assistant", content: text },
-            ];
+            // Chat history saving removed
+            console.log("Outcomes processing - chat history saving removed");
+
+            // Process and save outcomes
             try {
-              await chatService.saveChatHistory(userId, chatId, messages);
-              console.log("Chat saved with ID:", chatId);
+              // Extract JSON from the response text
+              const jsonMatch = text.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                // Get the JSON string and fix potential issues
+                let jsonStr = jsonMatch[0];
+                // Replace single quotes with double quotes
+                jsonStr = jsonStr.replace(/'/g, '"');
+                // Fix escaped quotes in strings (like word"s)
+                jsonStr = jsonStr.replace(/(\w)"(\w)/g, "$1'$2");
 
-              // Process and save outcomes
-              try {
-                // Extract JSON from the response text
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                  // Get the JSON string and replace any single quotes with double quotes to ensure valid JSON
-                  let jsonStr = jsonMatch[0];
-                  jsonStr = jsonStr.replace(/'/g, '"');
+                try {
+                  const outcomeData = JSON.parse(jsonStr);
 
-                  try {
-                    const outcomeData = JSON.parse(jsonStr);
+                  // Import QBO service
+                  const { QBOService } = await import(
+                    "@/lib/services/qbo.service"
+                  );
+                  const qboService = new QBOService();
 
-                    // Import QBO service
-                    const { QBOService } = await import(
-                      "@/lib/services/qbo.service"
+                  // Save each outcome to QBO table
+                  for (const key in outcomeData) {
+                    const outcome = outcomeData[key];
+
+                    // Format the date as an actual Date object
+                    const deadlineDate = new Date(outcome.deadline);
+
+                    await qboService.createQBO(
+                      {
+                        name: outcome.name,
+                        beginningValue: 0, // Initial value
+                        currentValue: 0, // Initial value
+                        targetValue: outcome.targetValue,
+                        deadline: deadlineDate,
+                        points: outcome.points,
+                        notes: `Auto-generated from onboarding for ${businessName}`,
+                      },
+                      userId,
                     );
-                    const qboService = new QBOService();
 
-                    // Save each outcome to QBO table
-                    for (const key in outcomeData) {
-                      const outcome = outcomeData[key];
-
-                      // Format the date as an actual Date object
-                      const deadlineDate = new Date(outcome.deadline);
-
-                      await qboService.createQBO(
-                        {
-                          name: outcome.name,
-                          beginningValue: 0, // Initial value
-                          currentValue: 0, // Initial value
-                          targetValue: outcome.targetValue,
-                          deadline: deadlineDate,
-                          points: outcome.points,
-                          notes: `Auto-generated from onboarding for ${businessName}`,
-                        },
-                        userId,
-                      );
-
-                      console.log(`QBO created for outcome: ${outcome.name}`);
-                    }
-                  } catch (error) {
-                    console.error(
-                      "Error parsing JSON:",
-                      error,
-                      "Input string:",
-                      jsonStr,
-                    );
+                    console.log(`QBO created for outcome: ${outcome.name}`);
                   }
-                } else {
-                  console.error("No JSON format found in AI response");
+                } catch (error) {
+                  console.error(
+                    "Error parsing JSON:",
+                    error,
+                    "Input string:",
+                    jsonStr,
+                  );
                 }
-              } catch (parseError) {
-                console.error("Error parsing or saving QBO data:", parseError);
+              } else {
+                console.error("No JSON format found in AI response");
               }
-            } catch (saveError) {
-              console.error("Error saving chat history:", saveError);
+            } catch (parseError) {
+              console.error("Error parsing or saving QBO data:", parseError);
             }
+            // Error handling for chat history saving removed
           },
         }),
         timeoutPromise,
@@ -172,7 +167,7 @@ export async function POST(req: NextRequest) {
       });
 
       console.log("Stream response generated, sending back to client");
-      return result.toDataStreamResponse();
+      return (result as any).toDataStreamResponse(); // Type assertion here
     } else if (step === "jobs") {
       // Second step - jobs to be done
       const result = await Promise.race([
@@ -181,108 +176,106 @@ export async function POST(req: NextRequest) {
           system: systemPrompt,
           prompt: jobsPrompt,
           async onFinish({ text, usage, finishReason }) {
-            // Store chat history
-            const messages = [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: jobsPrompt },
-              { role: "assistant", content: text },
-            ];
+            // Chat history saving removed
+            console.log("Jobs processing - chat history saving removed");
+
+            // Process jobs data here if needed (similar to outcomes)
             try {
-              await chatService.saveChatHistory(userId, chatId, messages);
-              console.log("Jobs chat saved with ID:", chatId);
+              // Extract JSON from the response text
+              const jsonMatch = text.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                // Get the JSON string and fix potential issues
+                let jsonStr = jsonMatch[0];
+                // Replace single quotes with double quotes
+                jsonStr = jsonStr.replace(/'/g, '"');
+                // Fix escaped quotes in strings (like word"s)
+                jsonStr = jsonStr.replace(/(\w)"(\w)/g, "$1'$2");
 
-              // Process jobs data here if needed (similar to outcomes)
-              try {
-                // Extract JSON from the response text
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                  // Get the JSON string and replace any single quotes with double quotes
-                  let jsonStr = jsonMatch[0];
-                  jsonStr = jsonStr.replace(/'/g, '"');
+                try {
+                  const jobsData = JSON.parse(jsonStr);
+                  console.log("Jobs data parsed successfully");
 
-                  try {
-                    const jobsData = JSON.parse(jsonStr);
-                    console.log("Jobs data parsed successfully");
+                  // Import Job service
+                  const { JobService } = await import(
+                    "@/lib/services/job.service"
+                  );
+                  const jobService = new JobService();
 
-                    // Import Job service
-                    const { JobService } = await import(
-                      "@/lib/services/job.service"
+                  // Import Task service
+                  const { TaskService } = await import(
+                    "@/lib/services/task.service"
+                  );
+                  const taskService = new TaskService();
+
+                  // Save each job to Job table and create associated tasks
+                  for (const key in jobsData) {
+                    const job = jobsData[key];
+
+                    // Create the job first
+                    const createdJob = await jobService.createJob(
+                      {
+                        title: job.title,
+                        isDone: false,
+                        notes: `Auto-generated from onboarding for ${businessName}`,
+                        tasks: [], // Initialize empty tasks array
+                      },
+                      userId,
                     );
-                    const jobService = new JobService();
 
-                    // Import Task service
-                    const { TaskService } = await import(
-                      "@/lib/services/task.service"
-                    );
-                    const taskService = new TaskService();
+                    console.log(`Job created: ${job.title}`);
 
-                    // Save each job to Job table and create associated tasks
-                    for (const key in jobsData) {
-                      const job = jobsData[key];
-                      
-                      // Create the job first
-                      const createdJob = await jobService.createJob(
-                        {
-                          title: job.title,
-                          isDone: false,
-                          notes: `Auto-generated from onboarding for ${businessName}`,
-                          tasks: [], // Initialize empty tasks array
-                        },
-                        userId,
-                      );
+                    // If the job has tasks, create them
+                    if (
+                      job.tasks &&
+                      Array.isArray(job.tasks) &&
+                      job.tasks.length > 0
+                    ) {
+                      const taskIds = [];
 
-                      console.log(`Job created: ${job.title}`);
-                      
-                      // If the job has tasks, create them
-                      if (job.tasks && Array.isArray(job.tasks) && job.tasks.length > 0) {
-                        const taskIds = [];
-                        
-                        // Create each task for this job
-                        for (const taskData of job.tasks) {
-                          const task = await taskService.createTask(
-                            {
-                              title: taskData.title,
-                              notes: taskData.notes || `Task for ${job.title}`,
-                              jobId: createdJob._id, // Associate with the job
-                              completed: false,
-                            },
-                            userId,
-                          );
-                          
-                          taskIds.push(task._id);
-                          console.log(`Task created: ${taskData.title} for job: ${job.title}`);
-                        }
-                        
-                        // Update the job with the task IDs
-                        if (taskIds.length > 0) {
-                          await jobService.updateJob(
-                            createdJob._id,
-                            userId,
-                            {
-                              tasks: taskIds,
-                              // Set the first task as the next task
-                              nextTaskId: taskIds[0]
-                            }
-                          );
-                          console.log(`Updated job ${job.title} with ${taskIds.length} tasks`);
-                        }
+                      // Create each task for this job
+                      for (const taskData of job.tasks) {
+                        const task = await taskService.createTask(
+                          {
+                            title: taskData.title,
+                            notes: taskData.notes || `Task for ${job.title}`,
+                            jobId: createdJob._id, // Associate with the job
+                            completed: false,
+                          },
+                          userId,
+                        );
+
+                        taskIds.push(task._id);
+                        console.log(
+                          `Task created: ${taskData.title} for job: ${job.title}`,
+                        );
+                      }
+
+                      // Update the job with the task IDs
+                      if (taskIds.length > 0) {
+                        await jobService.updateJob(createdJob._id, userId, {
+                          tasks: taskIds,
+                          // Set the first task as the next task
+                          nextTaskId: taskIds[0],
+                        });
+                        console.log(
+                          `Updated job ${job.title} with ${taskIds.length} tasks`,
+                        );
                       }
                     }
-                  } catch (error) {
-                    console.error(
-                      "Error parsing jobs JSON:",
-                      error,
-                      "Input string:",
-                      jsonStr,
-                    );
                   }
+                } catch (error) {
+                  console.error(
+                    "Error parsing jobs JSON:",
+                    error,
+                    "Input string:",
+                    jsonStr,
+                  );
                 }
-              } catch (parseError) {
-                console.error("Error parsing jobs data:", parseError);
               }
-            } catch (saveError) {
-              console.error("Error saving jobs chat history:", saveError);
+            } catch (parseError) {
+              console.error("Error parsing jobs data:", parseError);
             }
+            // Error handling for jobs chat history saving removed
           },
         }),
         timeoutPromise,
@@ -294,7 +287,7 @@ export async function POST(req: NextRequest) {
       });
 
       console.log("Jobs stream response generated, sending back to client");
-      return result.toDataStreamResponse();
+      return (result as any).toDataStreamResponse(); // Type assertion here
     } else {
       return new Response(
         JSON.stringify({

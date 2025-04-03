@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { validateAuth } from '@/lib/utils/auth-utils';
 import ownerService from "@/lib/services/owner.service";
 
 export async function PUT(
@@ -7,13 +7,15 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-   
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authResult = await validateAuth();
+    
+    if (!authResult.isAuthorized) {
+      return authResult.response;
     }
     
-    const id = (await params).id;
+    const userId = authResult.userId;
+    
+    const { id } = await params;
     const body = await request.json();
     const { name } = body;
     
@@ -24,7 +26,7 @@ export async function PUT(
       );
     }
     
-    const owner = await ownerService.updateOwner(id, name, userId);
+    const owner = await ownerService.updateOwner(id, name, userId!);
    
     if (!owner) {
       return NextResponse.json(
@@ -48,14 +50,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth();
-   
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authResult = await validateAuth();
+    
+    if (!authResult.isAuthorized) {
+      return authResult.response;
     }
     
-    const id = (await params).id;
-    const success = await ownerService.deleteOwner(id, userId);
+    const userId = authResult.userId;
+    
+    const { id } = await params;
+    const success = await ownerService.deleteOwner(id, userId!);
    
     if (!success) {
       return NextResponse.json(

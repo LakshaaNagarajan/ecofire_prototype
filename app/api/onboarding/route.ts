@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { validateAuth } from '@/lib/utils/auth-utils';
 import { openai } from "@ai-sdk/openai";
 import { createDataStreamResponse, streamText } from "ai";
 import { BusinessInfoService } from "@/lib/services/business-info.service";
@@ -7,10 +7,13 @@ import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new Response("Unauthorized", { status: 401 });
+    const authResult = await validateAuth();
+    
+    if (!authResult.isAuthorized) {
+      return authResult.response;
     }
+    
+    const userId = authResult.userId;
 
     const params = await req.json();
     const {
@@ -41,8 +44,8 @@ export async function POST(req: NextRequest) {
 
     // Update the business info with the business description as mission statement
     try {
-      await businessInfoService.updateBusinessInfo(userId, {
-        missionStatement: businessDescription,
+      await businessInfoService.updateBusinessInfo(userId!, {
+        missionStatement: businessDescription
       });
       console.log("Business info updated with mission statement");
     } catch (updateError) {
@@ -160,6 +163,20 @@ export async function POST(req: NextRequest) {
                       );
                       console.log(`QBO created for outcome: ${outcome.name}`);
                     }
+                    await qboService.createQBO(
+                      {
+                        name: outcome.name,
+                        beginningValue: 0, // Initial value
+                        currentValue: 0, // Initial value
+                        targetValue: outcome.targetValue,
+                        deadline: deadlineDate,
+                        points: outcome.points,
+                        notes: `Auto-generated from onboarding for ${businessName}`,
+                      },
+                      userId!,
+                    );
+
+                    console.log(`QBO created for outcome: ${outcome.name}`);
                   }
                 } catch (error) {
                   console.error(
@@ -278,7 +295,7 @@ export async function POST(req: NextRequest) {
                           notes: `Auto-generated from onboarding for ${businessName}`,
                           tasks: [], // Initialize empty tasks array
                         },
-                        userId,
+                        userId!,
                       );
 
                       jobId = createdJob._id;
@@ -304,7 +321,7 @@ export async function POST(req: NextRequest) {
                             jobId: jobId, // Associate with the job
                             completed: false,
                           },
-                          userId,
+                          userId!,
                         );
 
                         taskIds.push(task._id);
@@ -322,7 +339,7 @@ export async function POST(req: NextRequest) {
                         const existingTaskIds = jobToUpdate?.tasks || [];
                         const allTaskIds = [...existingTaskIds, ...taskIds];
 
-                        await jobService.updateJob(jobId, userId, {
+                        await jobService.updateJob(jobId, userId!, {
                           tasks: allTaskIds,
                           // Set the first task as the next task if no next task is set
                           nextTaskId: jobToUpdate?.nextTaskId || taskIds[0],

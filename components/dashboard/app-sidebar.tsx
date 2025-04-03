@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, Download, Dog, Target, Clipboard, BarChart2, ChevronDown, Users, ClipboardCheck, ChartNoAxesCombinedIcon } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, Download, Dog, Target, Clipboard, BarChart2, ChevronDown, Users, ClipboardCheck, ChartNoAxesCombinedIcon, BriefcaseBusinessIcon } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import Link from "next/link"
+import { OrganizationSwitcher } from "./organization-switcher"
 
 // Menu items.
 const items = [
@@ -59,7 +60,12 @@ const items = [
     title: "Search",
     url: "/dashboard/search",
     icon: Search,
-  }  
+  },
+  {
+    title: "Organizations",
+    url: "/dashboard/organizations",
+    icon: BriefcaseBusinessIcon,
+  }
 ]
 
 // Backstage sub-items
@@ -130,6 +136,9 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+                <OrganizationSwitcher />
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton size={"lg"} asChild>
               <a href="#">

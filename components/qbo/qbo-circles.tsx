@@ -111,7 +111,7 @@ export function QBOCircles({ onSelectJob }: QBOCircleProps) {
 
   return (
     <div className="mb-4">
-      <h2 className="text-lg font-semibold mb-6">10000-ft view of jobs</h2>
+      <h2 className="text-lg font-semibold mb-6 flex items-center">10000-ft view of jobs</h2>
       <div className="flex flex-col gap-6">
         {qbos.map((qbo) => {
           const jobs = qboJobsMap[qbo._id] || [];

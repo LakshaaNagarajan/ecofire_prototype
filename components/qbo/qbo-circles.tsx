@@ -112,47 +112,86 @@ export function QBOCircles({ onSelectJob }: QBOCircleProps) {
   return (
     <div className="mb-4">
       <h2 className="text-lg font-semibold mb-6 flex items-center justify-center">10000-ft view of jobs</h2>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-10">
         {qbos.map((qbo) => {
           const jobs = qboJobsMap[qbo._id] || [];
           const colorClass = getQboColor(qbo.name);
 
           return (
-            <TooltipProvider key={qbo._id}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Card
-                    className={`flex flex-col items-center justify-center p-4 rounded-full border-2 ${colorClass} cursor-pointer transition-transform hover:scale-105 min-w-[180px] min-h-[180px] max-w-[230px] max-h-[230px] overflow-hidden mx-auto`}
-                  >
-                    <div className="font-bold text-center mb-2">{qbo.name}</div>
-                    <div className="mt-2 w-full overflow-y-auto max-h-[150px] text-center">
-                      {jobs.length === 0 ? (
-                        <div className="text-xs italic">No jobs mapped</div>
-                      ) : (
-                        <ul className="text-xs">
-                          {jobs.map((job) => (
-                            <li
-                              key={job._id}
-                              className="mb-1 truncate hover:underline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onSelectJob) onSelectJob(job._id);
-                              }}
-                            >
-                              {job.title}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+            <div key={qbo._id} className="relative group">
+              {/* Normal circle (displayed by default) */}
+              <Card
+                className={`flex flex-col items-center justify-center p-4 rounded-full border-2 ${colorClass} cursor-pointer transition-all duration-300 ease-in-out min-w-[180px] min-h-[180px] max-w-[180px] max-h-[180px] overflow-hidden mx-auto group-hover:opacity-0 group-hover:invisible`}
+              >
+                <div className="font-bold text-center mb-2">{qbo.name}</div>
+                <div className="mt-2 w-full overflow-hidden text-center">
+                  {jobs.length === 0 ? (
+                    <div className="text-xs italic">No jobs mapped</div>
+                  ) : (
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {jobs.map((job) => (
+                        <span 
+                          key={job._id} 
+                          className="inline-flex items-center justify-center p-1"
+                        >
+                          <svg 
+                            className="h-4 w-4" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <path d="M10 13a3 3 0 0 1-3-3V5a3 3 0 0 1 6 0v5a3 3 0 0 1-3 3z" />
+                            <path d="M10 13v3m-4-3h8" />
+                          </svg>
+                        </span>
+                      ))}
                     </div>
-                  </Card>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="font-semibold">{qbo.name}</p>
-                  <p className="text-sm">{jobs.length} jobs mapped</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  )}
+                </div>
+              </Card>
+              
+              {/* Expanded circle (displayed on hover) */}
+              <Card
+                className={`absolute top-0 left-1/2 -translate-x-1/2 flex flex-col items-center p-5 rounded-3xl border-2 ${colorClass} cursor-pointer transition-all duration-300 ease-in-out opacity-0 invisible group-hover:opacity-100 group-hover:visible min-w-[280px] min-h-[280px] max-h-none overflow-y-auto z-10 shadow-lg`}
+              >
+                <div className="font-bold text-center mb-3 text-lg">{qbo.name}</div>
+                <div className="w-full text-left">
+                  {jobs.length === 0 ? (
+                    <div className="text-sm italic text-center">No jobs mapped</div>
+                  ) : (
+                    <ul className="text-sm space-y-2">
+                      {jobs.map((job) => (
+                        <li
+                          key={job._id}
+                          className="flex items-center gap-2 p-1.5 hover:bg-white/30 rounded-md transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSelectJob) onSelectJob(job._id);
+                          }}
+                        >
+                          <svg 
+                            className="h-5 w-5 flex-shrink-0" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <path d="M10 13a3 3 0 0 1-3-3V5a3 3 0 0 1 6 0v5a3 3 0 0 1-3 3z" />
+                            <path d="M10 13v3m-4-3h8" />
+                          </svg>
+                          <span className="hover:underline cursor-pointer">{job.title}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </Card>
+            </div>
           );
         })}
       </div>

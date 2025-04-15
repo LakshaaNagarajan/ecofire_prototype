@@ -110,9 +110,9 @@ export function QBOCircles({ onSelectJob }: QBOCircleProps) {
   };
 
   return (
-    <div className="mb-8">
+    <div className="mb-4">
       <h2 className="text-lg font-semibold mb-4">QBO Job Mappings</h2>
-      <div className="flex flex-wrap gap-6 justify-center">
+      <div className="flex flex-col gap-4">
         {qbos.map((qbo) => {
           const jobs = qboJobsMap[qbo._id] || [];
           const colorClass = getQboColor(qbo.name);
@@ -122,7 +122,7 @@ export function QBOCircles({ onSelectJob }: QBOCircleProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Card
-                    className={`flex flex-col items-center justify-center p-4 rounded-full border-2 ${colorClass} cursor-pointer transition-transform hover:scale-105 min-w-[200px] min-h-[200px] max-w-[300px] max-h-[300px] overflow-hidden`}
+                    className={`flex flex-col items-center justify-center p-4 rounded-full border-2 ${colorClass} cursor-pointer transition-transform hover:scale-105 min-w-[180px] min-h-[180px] max-w-[230px] max-h-[230px] overflow-hidden mx-auto`}
                   >
                     <div className="font-bold text-center mb-2">{qbo.name}</div>
                     <div className="mt-2 w-full overflow-y-auto max-h-[150px] text-center">

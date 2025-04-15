@@ -776,19 +776,6 @@ export default function JobsPage() {
             </Button>
           </div>
         </div>
-        
-        {/* QBO Circles Component */}
-        <div className="mb-8">
-          <QBOCircles 
-            onSelectJob={(jobId) => {
-              // Find the job and open its tasks sidebar
-              const job = [...activeJobs, ...completedJobs].find(j => j.id === jobId);
-              if (job) {
-                handleOpenTasksSidebar(job);
-              }
-            }} 
-          />
-        </div>
 
         {/* Filter and Sort controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
@@ -807,28 +794,46 @@ export default function JobsPage() {
           />
         </div>
 
-        {viewMode === "grid" ? (
-          <JobsGrid
-            data={sortedActiveJobs} // Use sorted jobs instead of filtered
-            onEdit={handleOpenEdit}
-            onDelete={handleDelete}
-            onSelect={handleActiveSelect}
-            onOpenTasksSidebar={handleOpenTasksSidebar}
-            taskOwnerMap={taskOwnerMap}
-            selectedJobs={selectedActiveJobs}
-          />
-        ) : (
-          <DataTable
-            columns={columns(
-              handleOpenEdit,
-              handleDelete,
-              handleActiveSelect,
-              handleOpenTasksSidebar,
-              taskOwnerMap
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Main job grid/table - takes 2/3 of the space */}
+          <div className="md:w-2/3">
+            {viewMode === "grid" ? (
+              <JobsGrid
+                data={sortedActiveJobs} // Use sorted jobs instead of filtered
+                onEdit={handleOpenEdit}
+                onDelete={handleDelete}
+                onSelect={handleActiveSelect}
+                onOpenTasksSidebar={handleOpenTasksSidebar}
+                taskOwnerMap={taskOwnerMap}
+                selectedJobs={selectedActiveJobs}
+              />
+            ) : (
+              <DataTable
+                columns={columns(
+                  handleOpenEdit,
+                  handleDelete,
+                  handleActiveSelect,
+                  handleOpenTasksSidebar,
+                  taskOwnerMap
+                )}
+                data={sortedActiveJobs} // Use sorted jobs instead of filtered
+              />
             )}
-            data={sortedActiveJobs} // Use sorted jobs instead of filtered
-          />
-        )}
+          </div>
+          
+          {/* QBO Circles Component - takes 1/3 of the space */}
+          <div className="md:w-1/3 mb-8 md:sticky md:top-20 md:self-start">
+            <QBOCircles 
+              onSelectJob={(jobId) => {
+                // Find the job and open its tasks sidebar
+                const job = [...activeJobs, ...completedJobs].find(j => j.id === jobId);
+                if (job) {
+                  handleOpenTasksSidebar(job);
+                }
+              }} 
+            />
+          </div>
+        </div>
 
         {/* Show completed jobs section if there are any to display or if no filters are active */}
         {(filteredCompletedJobs.length > 0 ||

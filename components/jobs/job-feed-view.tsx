@@ -15,6 +15,7 @@ import { JobsGrid } from "@/components/jobs/jobs-grid";
 import FilterComponent from "@/components/filters/filter-component";
 import SortingComponent from "@/components/sorting/sorting-component";
 import { useSearchParams } from "next/navigation";
+import { QBOCircles } from "@/components/qbo/qbo-circles";
 
 // Updated to include business functions and remove owner
 function convertJobsToTableData(
@@ -774,6 +775,19 @@ export default function JobsPage() {
               <Plus className="mr-2 h-4 w-4" /> Create Job
             </Button>
           </div>
+        </div>
+        
+        {/* QBO Circles Component */}
+        <div className="mb-8">
+          <QBOCircles 
+            onSelectJob={(jobId) => {
+              // Find the job and open its tasks sidebar
+              const job = [...activeJobs, ...completedJobs].find(j => j.id === jobId);
+              if (job) {
+                handleOpenTasksSidebar(job);
+              }
+            }} 
+          />
         </div>
 
         {/* Filter and Sort controls */}

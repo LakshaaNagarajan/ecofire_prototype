@@ -794,9 +794,9 @@ export default function JobsPage() {
           />
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-8">
           {/* Main job grid/table - takes 2/3 of the space */}
-          <div className="md:w-2/3">
+          <div className="md:w-3/5">
             {viewMode === "grid" ? (
               <JobsGrid
                 data={sortedActiveJobs} // Use sorted jobs instead of filtered
@@ -821,8 +821,8 @@ export default function JobsPage() {
             )}
           </div>
           
-          {/* QBO Circles Component - takes 1/3 of the space */}
-          <div className="md:w-1/3 mb-8 md:sticky md:top-20 md:self-start">
+          {/* QBO Circles Component - takes 2/5 of the space with padding */}
+          <div className="md:w-2/5 mb-8 md:sticky md:top-20 md:self-start md:pl-4">
             <QBOCircles 
               onSelectJob={(jobId) => {
                 // Find the job and open its tasks sidebar

@@ -11,9 +11,23 @@ export async function GET() {
     if (!authResult.isAuthorized) {
       return authResult.response;
     }
-
+   
     const userId = authResult.userId;
-
+    const actualUserId = authResult.actualUserId;
+    const email = authResult.email;
+   
+    // Ensure default owner for both personal and organization views
+    if (email) {
+      // For personal view, use the actual user ID
+      if (!authResult.isOrganization) {
+        await ownerService.ensureDefaultOwner(actualUserId!, email);
+      } 
+      // For organization view, use the organization ID (viewId)
+      else {
+        await ownerService.ensureDefaultOwner(userId!, email);
+      }
+    }
+   
     const owners = await ownerService.getAllOwners(userId!);
     return NextResponse.json(owners);
   } catch (error) {
@@ -28,16 +42,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const authResult = await validateAuth();
-
+   
     if (!authResult.isAuthorized) {
       return authResult.response;
     }
-
+   
     const userId = authResult.userId;
-
     const body = await request.json();
     const { name } = body;
-
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }

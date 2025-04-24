@@ -535,12 +535,13 @@ export function TasksSidebar({
                     onClick={() => {
                       // Close the sidebar first
                       onOpenChange(false);
-                      // Then open the edit dialog directly
-                      // This event will be captured in job-feed-view to open the edit dialog
-                      const editEvent = new CustomEvent('open-job-edit', { 
-                        detail: { jobId: selectedJob.id } 
-                      });
-                      window.dispatchEvent(editEvent);
+                      // Then set the editing job and open the dialog
+                      if (selectedJob) {
+                        const editEvent = new CustomEvent('open-job-edit', { 
+                          detail: { job: selectedJob } 
+                        });
+                        window.dispatchEvent(editEvent);
+                      }
                     }}
                   >
                     <Edit className="h-4 w-4 mr-2" /> Edit Job

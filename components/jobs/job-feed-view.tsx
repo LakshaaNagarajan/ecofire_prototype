@@ -461,12 +461,22 @@ export default function JobsPage() {
       setDialogOpen(true);
     };
 
-    // Add the event listener
-    window.addEventListener("openJobDialog", handleOpenDialog);
+    // Event handler for editing a job from TasksSidebar
+    const handleEditJob = (event: any) => {
+      if (event.detail && event.detail.job) {
+        setEditingJob(event.detail.job);
+        setDialogOpen(true);
+      }
+    };
 
-    // Clean up the event listener when component unmounts
+    // Add the event listeners
+    window.addEventListener("openJobDialog", handleOpenDialog);
+    window.addEventListener("open-job-edit", handleEditJob);
+
+    // Clean up the event listeners when component unmounts
     return () => {
       window.removeEventListener("openJobDialog", handleOpenDialog);
+      window.removeEventListener("open-job-edit", handleEditJob);
     };
   }, []);
 

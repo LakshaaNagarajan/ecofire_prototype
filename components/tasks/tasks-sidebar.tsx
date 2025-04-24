@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, PawPrint, Calendar, Briefcase, FileText } from "lucide-react";
+import { Plus, PawPrint, Calendar, Briefcase, FileText, Edit } from "lucide-react";
 import { TaskDialog } from "./tasks-dialog";
 import { Task } from "./types";
 import { Job } from "@/components/jobs/table/columns";
@@ -501,14 +501,14 @@ export function TasksSidebar({
   // Format date helper function
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Not set";
-    
+
     // Parse the date and preserve the UTC date
     const date = new Date(dateString);
-    
+
     // Use toISOString to get YYYY-MM-DD in UTC, then create a new date with just that part
     const utcDateString = date.toISOString().split('T')[0];
     const displayDate = new Date(utcDateString + 'T00:00:00');
-  
+
     return displayDate.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -526,7 +526,23 @@ export function TasksSidebar({
           {/* Wrap the content with the TaskProvider */}
           <TaskProvider>
             <SheetHeader className="mb-4">
-              <SheetTitle>Job Tasks</SheetTitle>
+              <div className="flex justify-between items-center">
+                <SheetTitle>Job Tasks</SheetTitle>
+                {selectedJob && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      // Close the sidebar first
+                      onOpenChange(false);
+                      // Then open the edit dialog
+                      window.location.href = `/dashboard/jobs?edit=${selectedJob.id}`;
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" /> Edit Job
+                  </Button>
+                )}
+              </div>
               <SheetDescription>Manage tasks for this job</SheetDescription>
             </SheetHeader>
 

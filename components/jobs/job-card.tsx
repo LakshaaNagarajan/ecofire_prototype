@@ -276,18 +276,6 @@ const formatDate = (dateString?: string) => {
       
       {/* Action buttons */}
       <div className="flex justify-end p-2 border-t" onClick={(e) => e.stopPropagation()}>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8" 
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(currentJob);
-          }}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        
         <Button
           variant="ghost"
           size="icon"

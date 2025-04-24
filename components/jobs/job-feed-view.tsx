@@ -85,11 +85,11 @@ export default function JobsPage() {
       // First compare due dates (null dates go to the end)
       const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
       const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
-      
+
       if (dateA !== dateB) {
         return dateA - dateB; // Ascending by date
       }
-      
+
       // If dates are the same (or both null), sort by impact descending
       const impactA = a.impact || 0;
       const impactB = b.impact || 0;
@@ -375,7 +375,7 @@ export default function JobsPage() {
       // First fetch business functions
       const bfResponse = await fetch("/api/business-functions");
       const bfResult = await bfResponse.json();
-      
+
       let currentBusinessFunctions = [];
       if (bfResult.success) {
         currentBusinessFunctions = bfResult.data.map((bf: any) => ({
@@ -440,7 +440,7 @@ export default function JobsPage() {
   useEffect(() => {
     fetchJobs();
   }, []);
-  
+
 
   useEffect(() => {
     // Check if "open=true" is in the URL
@@ -478,7 +478,7 @@ export default function JobsPage() {
       // If no filters are active, show all jobs
       setFilteredActiveJobs(activeJobs);
       setFilteredCompletedJobs(completedJobs);
-      
+
       // Apply recommended sort to unfiltered jobs
       setSortedActiveJobs(sortByRecommended(activeJobs));
       setSortedCompletedJobs(sortByRecommended(completedJobs));
@@ -505,7 +505,7 @@ export default function JobsPage() {
 
     setFilteredActiveJobs(filteredActive);
     setFilteredCompletedJobs(filteredCompleted);
-    
+
     // Apply recommended sorting immediately
     setSortedActiveJobs(sortByRecommended(filteredActive));
     setSortedCompletedJobs(sortByRecommended(filteredCompleted));
@@ -600,41 +600,41 @@ export default function JobsPage() {
   };
 
   // Effect to reapply filters when jobs are loaded
-useEffect(() => {
-  // Only run this when we have loaded jobs and are not in loading state
-  if (!loading && activeJobs.length > 0) {
-    // Check if we have activeFilters already set (from initialFilters or previous state)
-    if (Object.keys(activeFilters).length > 0) {
-      console.log('Reapplying filters on page navigation/load:', activeFilters);
-      
-      // Filter active jobs
-      const filteredActive = activeJobs.filter((job) => {
-        return matchesFilters(job, activeFilters);
-      });
+  useEffect(() => {
+    // Only run this when we have loaded jobs and are not in loading state
+    if (!loading && activeJobs.length > 0) {
+      // Check if we have activeFilters already set (from initialFilters or previous state)
+      if (Object.keys(activeFilters).length > 0) {
+        console.log('Reapplying filters on page navigation/load:', activeFilters);
 
-      // Filter completed jobs - only apply non-status filters
-      const nonStatusFilters = { ...activeFilters };
-      delete nonStatusFilters.isDone;
+        // Filter active jobs
+        const filteredActive = activeJobs.filter((job) => {
+          return matchesFilters(job, activeFilters);
+        });
 
-      const filteredCompleted = completedJobs.filter((job) => {
-        // If isDone filter is true, show completed jobs, otherwise hide them
-        if (activeFilters.isDone === true) {
-          return matchesFilters(job, nonStatusFilters);
-        } else {
-          return false; // Hide completed jobs if not explicitly showing them
-        }
-      });
+        // Filter completed jobs - only apply non-status filters
+        const nonStatusFilters = { ...activeFilters };
+        delete nonStatusFilters.isDone;
 
-      // Update the filtered jobs lists
-      setFilteredActiveJobs(filteredActive);
-      setFilteredCompletedJobs(filteredCompleted);
-      
-      // Apply the recommended sort immediately
-      setSortedActiveJobs(sortByRecommended(filteredActive));
-      setSortedCompletedJobs(sortByRecommended(filteredCompleted));
+        const filteredCompleted = completedJobs.filter((job) => {
+          // If isDone filter is true, show completed jobs, otherwise hide them
+          if (activeFilters.isDone === true) {
+            return matchesFilters(job, nonStatusFilters);
+          } else {
+            return false; // Hide completed jobs if not explicitly showing them
+          }
+        });
+
+        // Update the filtered jobs lists
+        setFilteredActiveJobs(filteredActive);
+        setFilteredCompletedJobs(filteredCompleted);
+
+        // Apply the recommended sort immediately
+        setSortedActiveJobs(sortByRecommended(filteredActive));
+        setSortedCompletedJobs(sortByRecommended(filteredCompleted));
+      }
     }
-  }
-}, [loading, activeJobs, completedJobs, activeFilters]);
+  }, [loading, activeJobs, completedJobs, activeFilters]);
 
   // Handler for sort changes
   const handleActiveSortChange = (sortedJobs: Job[]) => {
@@ -771,6 +771,41 @@ useEffect(() => {
     setTasksSidebarOpen(open);
   };
 
+  const updateJobProgressById = async (jobId: string) => {
+    try {
+      const response = await fetch(`/api/jobs/${jobId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        // Update the job in the state
+        const updatedJob = result.data;
+        setActiveJobs((prevActiveJobs) =>
+          prevActiveJobs.map((job) =>
+            job.id === updatedJob.id ? updatedJob : job
+          )
+        );
+        setCompletedJobs((prevCompletedJobs) =>
+          prevCompletedJobs.map((job) =>
+            job.id === updatedJob.id ? updatedJob : job
+          )
+        );
+        setFilteredActiveJobs((prevFilteredActiveJobs) =>
+          prevFilteredActiveJobs.map((job) =>
+            job.id === updatedJob.id ? updatedJob : job
+          )
+        );
+        setFilteredCompletedJobs((prevFilteredCompletedJobs) =>
+          prevFilteredCompletedJobs.map((job) =>
+            job.id === updatedJob.id ? updatedJob : job
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error updating job progress:", error);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -890,7 +925,7 @@ useEffect(() => {
               />
             )}
           </div>
-          
+
           {/* QBO Circles Component - takes appropriate space with padding */}
           <div className="w-full xl:w-1/2 mb-8 xl:sticky xl:top-20 xl:self-start xl:pl-6 xl:border-l border-gray-200">
             <QBOCircles 

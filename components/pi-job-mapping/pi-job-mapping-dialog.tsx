@@ -228,7 +228,7 @@ export function MappingDialog({
           <div className="grid gap-4 py-4">
             <div className="grid items-center gap-2">
               <Label htmlFor="piId" className="text-left">
-                PI name <span className="text-red-500">*</span>
+                Output name <span className="text-red-500">*</span>
               </Label>
               <div className="relative" ref={piWrapperRef}>
                 <Input
@@ -270,7 +270,7 @@ export function MappingDialog({
             
             <div className="grid items-center gap-2">
               <Label htmlFor="piTarget" className="text-left">
-                PI Target
+                Output Target
               </Label>
               <Input
                 id="piTarget"
@@ -328,7 +328,7 @@ export function MappingDialog({
             
             <div className="grid items-center gap-2">
               <Label htmlFor="piImpactValue" className="text-left">
-                PI Impact Value <span className="text-red-500">*</span>
+                Output Impact Value <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="piImpactValue"
@@ -342,7 +342,7 @@ export function MappingDialog({
             
             <div className="grid items-center gap-2">
               <Label htmlFor="notes" className="text-left">
-                PI notes
+                Output notes
               </Label>
               <Textarea
                 id="notes"

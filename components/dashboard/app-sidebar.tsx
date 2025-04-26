@@ -53,7 +53,7 @@ const items = [
   },
   {
     title: "Onboarding",
-    url: "/dashboard/onboarding",
+    url: "/onboarding",
     icon: ClipboardCheck,
   },
   {
@@ -63,42 +63,37 @@ const items = [
   },
   {
     title: "Jobs",
-    url: "/dashboard/jobs",
+    url: "/jobs",
     icon: Calendar,
   },
   {
     title: "Business Functions",
-    url: "/dashboard/business-functions",
+    url: "/business-functions",
     icon: Search,
   },
   {
     title: "Business Info",
-    url: "/dashboard/business-info",
+    url: "/business-info",
     icon: BarChart2,
   },
   {
-    title: "Team",
-    url: "/dashboard/owners",
-    icon: Users,
-  },
-  {
     title: "Jija",
-    url: "/dashboard/jija",
+    url: "/jija",
     icon: Dog,
   },
   {
     title: "Search",
-    url: "/dashboard/search",
+    url: "/search",
     icon: Search,
   },
   {
     title: "Organizations",
-    url: "/dashboard/organizations",
+    url: "/organizations",
     icon: BriefcaseBusinessIcon,
   },
   {
     title: "Calendar",
-    url: "/dashboard/backstage/gcal",
+    url: "/backstage/gcal",
     icon: Calendar,
     id: "gcal-integration",
   },
@@ -107,18 +102,18 @@ const items = [
 // Backstage sub-items
 const backstageItems = [
   {
-    title: "PI & QBO Mapping",
-    url: "/dashboard/backstage/mappings",
+    title: "Output & Outcome Mapping",
+    url: "/backstage/mappings",
     icon: Target,
   },
   {
-    title: "QBO Board",
-    url: "/dashboard/backstage/qos",
+    title: "Outcome Board",
+    url: "/backstage/qos",
     icon: Clipboard,
   },
   {
-    title: "PI Board",
-    url: "/dashboard/backstage/pis",
+    title: "Output Board",
+    url: "/backstage/pis",
     icon: BarChart2,
   },
 ];
@@ -198,7 +193,7 @@ export function AppSidebar() {
 
     // Check if we're already on the jobs page
     const currentPath = window.location.pathname;
-    if (currentPath === "/dashboard/jobs") {
+    if (currentPath === '/jobs') {
       // If already on jobs page, apply filters directly
       window.dispatchEvent(
         new CustomEvent("applyWellnessFilters", {
@@ -207,7 +202,7 @@ export function AppSidebar() {
       );
     } else {
       // Otherwise navigate to jobs page - filters will be applied on page load
-      window.location.href = "/dashboard/jobs";
+      window.location.href = '/jobs';
     }
   }, []);
 

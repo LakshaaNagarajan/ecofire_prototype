@@ -279,7 +279,7 @@ export default function OnboardingPage() {
     // Add the 'tour=true' parameter directly to the URL instead of just using localStorage
     // Show a toast to inform the user that PIs are being generated
     toast({
-      title: "Generating Progress Indicators",
+      title: "Generating Outputs",
       description: "Please wait while we create PIs based on your jobs...",
     });
 
@@ -300,7 +300,7 @@ export default function OnboardingPage() {
 
       // After PIs are generated, generate Job-PI mappings
       toast({
-        title: "Generating Job-PI Mappings",
+        title: "Generating Jobs-Outputs Mappings",
         description:
           "Please wait while we create mappings between jobs and PIs...",
       });
@@ -321,7 +321,7 @@ export default function OnboardingPage() {
 
       // After Job-PI mappings are generated, generate PI-QBO mappings
       toast({
-        title: "Generating PI-QBO Mappings",
+        title: "Generating Outputs-Outcomes Mappings",
         description:
           "Please wait while we create mappings between PIs and QBOs...",
       });
@@ -977,11 +977,11 @@ export default function OnboardingPage() {
               {isJobsLoading
                 ? "Generating Jobs..."
                 : isPILoading
-                  ? "Generating PIs..."
+                  ? "Generating Outputs..."
                   : isMappingsLoading
-                    ? "Generating Job-PI Mappings..."
+                    ? "Generating Jobs-Outputs Mappings..."
                     : isPiQboMappingsLoading
-                      ? "Generating PI-QBO Mappings..."
+                      ? "Generating Outputs-Outcomes Mappings..."
                       : "Go to Jobs feed"}
             </Button>
           </div>

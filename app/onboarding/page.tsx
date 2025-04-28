@@ -280,7 +280,7 @@ export default function OnboardingPage() {
     // Show a toast to inform the user that PIs are being generated
     toast({
       title: "Generating Outputs",
-      description: "Please wait while we create PIs based on your jobs...",
+      description: "Please wait while we create Outputs based on your JObs...",
     });
 
     try {
@@ -302,7 +302,7 @@ export default function OnboardingPage() {
       toast({
         title: "Generating Jobs-Outputs Mappings",
         description:
-          "Please wait while we create mappings between jobs and PIs...",
+          "Please wait while we create mappings between Jobs and Outputs...",
       });
 
       // Call the API with the step parameter set to "mappings"
@@ -323,7 +323,7 @@ export default function OnboardingPage() {
       toast({
         title: "Generating Outputs-Outcomes Mappings",
         description:
-          "Please wait while we create mappings between PIs and QBOs...",
+          "Please wait while we create mappings between Outputs and Outcomes...",
       });
 
       // Call the API with the step parameter set to "pi-qbo-mappings"

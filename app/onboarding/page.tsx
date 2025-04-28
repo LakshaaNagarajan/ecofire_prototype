@@ -94,6 +94,7 @@ export default function OnboardingPage() {
     id: "jobs-completion",
     api: "/api/onboarding",
     onResponse(response) {
+      // console.log("DEBUG: Jobs response: ", response);
       console.log("Jobs response received:", response.status);
       if (!response.ok) {
         console.error("Jobs API response not OK:", response.status);
@@ -108,7 +109,7 @@ export default function OnboardingPage() {
     onFinish(result, completion) {
       // console.log("Jobs usage", usage);
       // console.log("Jobs finishReason", finishReason);
-      // console.log("Jobs result JSON:", result); // Added debugging output
+      // console.log("DEBUG: Jobs result JSON:", result); // Added debugging output
       // Add the completion to jobs messages for display
       setJobsMessages([
         ...jobsMessages,
@@ -362,7 +363,7 @@ export default function OnboardingPage() {
           "There was a problem generating PIs or mappings, but you can still return to dashboard.",
         variant: "destructive",
       });
-      // Redirect to jobs page instead of dashboard with the onboarding tour 
+      // Redirect to jobs page instead of dashboard with the onboarding tour
       router.push("/jobs?tour=true");
     }
   };
@@ -546,7 +547,7 @@ export default function OnboardingPage() {
               value={monthsInBusiness}
               onChange={(e) =>
                 setMonthsInBusiness(
-                  e.target.value === "" ? 0 : Number(e.target.value)
+                  e.target.value === "" ? 0 : Number(e.target.value),
                 )
               }
               placeholder="0"
@@ -563,7 +564,7 @@ export default function OnboardingPage() {
               value={annualRevenue}
               onChange={(e) =>
                 setAnnualRevenue(
-                  e.target.value === "" ? 0 : Number(e.target.value)
+                  e.target.value === "" ? 0 : Number(e.target.value),
                 )
               }
               placeholder="Enter your annual revenue"
@@ -747,9 +748,12 @@ export default function OnboardingPage() {
                                         Deadline:
                                       </span>{" "}
                                       {new Date(
-                                        outcome.deadline
+                                        outcome.deadline,
                                       ).toLocaleDateString()}
                                     </p>
+                                    <div className="mb-3 text-sm text-gray-700">
+                                      <p>{outcome.notes}</p>
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -760,7 +764,7 @@ export default function OnboardingPage() {
                     } catch (e) {
                       console.error(
                         "Error parsing outcome data for display:",
-                        e
+                        e,
                       );
                     }
                     return (
@@ -895,7 +899,7 @@ export default function OnboardingPage() {
                                                   </p>
                                                 )}
                                               </div>
-                                            )
+                                            ),
                                           )}
                                         </div>
                                       </div>
@@ -973,12 +977,12 @@ export default function OnboardingPage() {
               {isJobsLoading
                 ? "Generating Jobs..."
                 : isPILoading
-                ? "Generating PIs..."
-                : isMappingsLoading
-                ? "Generating Job-PI Mappings..."
-                : isPiQboMappingsLoading
-                ? "Generating PI-QBO Mappings..."
-                : "Go to Jobs feed"}
+                  ? "Generating PIs..."
+                  : isMappingsLoading
+                    ? "Generating Job-PI Mappings..."
+                    : isPiQboMappingsLoading
+                      ? "Generating PI-QBO Mappings..."
+                      : "Go to Jobs feed"}
             </Button>
           </div>
         </div>

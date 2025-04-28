@@ -77,13 +77,13 @@ export async function POST(req: NextRequest) {
 
     // Different prompts for each step
     const outcomePrompt =
-      'Please suggest the 3 most important outcome metrics for the next 3 months that I can use to track my progress towards accomplishing my mission and distribute 100 points among these outcome metrics as per their importance towards my mission. Output your result in the form of a JSON in the following format: { "outcome1": { "name": "Outcome 1", "targetValue": 100, "deadline": "2025-12-31", "points": 50 } }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
+      'Please suggest the 3 most important outcome metrics for the next 3 months that I can use to track my progress towards accomplishing my mission and distribute 100 points among these outcome metrics as per their importance towards my mission. Output your result in the form of a JSON in the following format: { "outcome1": { "name": "Outcome 1", "targetValue": 100, "deadline": "2025-12-31", "points": 50, "notes": "Explanation of how this outcome relates to the mission statement" } }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
 
     const jobsPrompt =
       'Please generate the 10 most important jobs to be done in my business for achieving my mission statement. For each job, also generate up to 3 specific tasks that need to be completed to accomplish that job. Output your result in the form of a JSON in the following format: { "job1": { "title": "Job 1 Title", "notes": "Description of what needs to be done", "tasks": [{"title": "Task 1 Title", "notes": "Description of the task"}, {"title": "Task 2 Title", "notes": "Description of the task"}, {"title": "Task 3 Title", "notes": "Description of the task"}] } }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
 
     const pisPrompt =
-      'Considering all of my jobs to be done, what are all the 5 most important quantifiable metrics I can use to track my progress on each of them? It is not necessary for every job to be done to be associated with a unique metric. Avoid outcome metrics. Output your result in the form of a JSON in the following format: { "pi1": { "name": "PI 1", "targetValue": 100, "deadline": "2025-12-31"} }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
+      'Considering all of my jobs to be done, what are all the 5 most important quantifiable metrics I can use to track my progress on each of them? It is not necessary for every job to be done to be associated with a unique metric. Avoid outcome metrics. Output your result in the form of a JSON in the following format: { "pi1": { "name": "PI 1", "targetValue": 100, "deadline": "2025-12-31", "notes": "Explanation of which job or jobs this progress indicator relates to and how it relates" } }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
 
     // Set a timeout for the OpenAI API call
     const timeoutPromise = new Promise((_, reject) => {
@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
               if (jsonMatch) {
                 // Get the JSON string
                 let jsonStr = jsonMatch[0];
+                // console.log("DEBUG: Outcome JSON data:\n", jsonStr);
 
                 try {
                   // Use dirty-json to parse the string instead of manual fixing
@@ -142,7 +143,9 @@ export async function POST(req: NextRequest) {
                         targetValue: outcome.targetValue,
                         deadline: deadlineDate,
                         points: outcome.points,
-                        notes: `Updated during onboarding for ${businessName}`,
+                        notes:
+                          `(Updated during onboarding for ${businessName}) ` +
+                          outcome.notes,
                       });
                       console.log(`QBO updated for outcome: ${outcome.name}`);
                     } else {
@@ -155,7 +158,9 @@ export async function POST(req: NextRequest) {
                           targetValue: outcome.targetValue,
                           deadline: deadlineDate,
                           points: outcome.points,
-                          notes: `Auto-generated from onboarding for ${businessName}`,
+                          notes:
+                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            outcome.notes,
                         },
                         userId!,
                       );
@@ -191,6 +196,7 @@ export async function POST(req: NextRequest) {
       return (result as any).toDataStreamResponse(); // Type assertion here
     } else if (step === "jobs") {
       // Second step - jobs to be done
+      // console.log("DEBUG: Jobs prompt -- ", jobsPrompt);
       const result = await Promise.race([
         streamText({
           model: openai("gpt-4-turbo"),
@@ -203,6 +209,7 @@ export async function POST(req: NextRequest) {
             // Process jobs data here if needed (similar to outcomes)
             try {
               // Extract JSON from the response text
+              // console.log("DEBUG: Jobs text:", text);
               const jsonMatch = text.match(/\{[\s\S]*\}/);
               if (jsonMatch) {
                 // Get the JSON string
@@ -245,7 +252,9 @@ export async function POST(req: NextRequest) {
 
                       // Update the job notes if needed
                       await jobService.updateJob(jobId, userId!, {
-                        notes: `Updated during onboarding for ${businessName}`,
+                        notes:
+                          `(Updated during onboarding for ${businessName}) ` +
+                          job.notes,
                       });
 
                       // Clear existing tasks to replace with new ones
@@ -259,7 +268,9 @@ export async function POST(req: NextRequest) {
                         {
                           title: job.title,
                           isDone: false,
-                          notes: `Auto-generated from onboarding for ${businessName}`,
+                          notes:
+                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            job.notes,
                           tasks: [], // Initialize empty tasks array
                         },
                         userId!,
@@ -390,7 +401,9 @@ export async function POST(req: NextRequest) {
                       await piService.updatePI(existingPI._id, userId!, {
                         targetValue: pi.targetValue,
                         deadline: deadlineDate,
-                        notes: `Updated during onboarding for ${businessName}`,
+                        notes:
+                          `(Updated during onboarding for ${businessName}) ` +
+                          pi.notes,
                       });
                       console.log(`PI updated: ${pi.name}`);
                     } else {
@@ -401,7 +414,9 @@ export async function POST(req: NextRequest) {
                           beginningValue: 0, // Initial value
                           targetValue: pi.targetValue,
                           deadline: deadlineDate,
-                          notes: `Auto-generated from onboarding for ${businessName}`,
+                          notes:
+                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            pi.notes,
                         },
                         userId!,
                       );
@@ -449,13 +464,10 @@ export async function POST(req: NextRequest) {
 
       // Create a context string with jobs and PIs information for the AI
       const jobsContext = jobs
-        .map((job) => `Job ID: ${job._id}, Title: ${job.title}`)
+        .map((job) => `Job Title: ${job.title}, Notes: ${job.notes}`)
         .join("\n");
       const pisContext = pis
-        .map(
-          (pi) =>
-            `PI ID: ${pi._id}, Name: ${pi.name}, Target Value: ${pi.targetValue}`,
-        )
+        .map((pi) => `PI Name: ${pi.name}, Notes: ${pi.notes}`)
         .join("\n");
 
       // Create a custom prompt for mapping generation
@@ -469,7 +481,7 @@ export async function POST(req: NextRequest) {
         `Double-check your output to verify that no job is left unmapped. If necessary, create logical connections between jobs and PIs based on their relationship to the business mission. ` +
         `Before finalizing, count the unique job IDs in your mappings and ensure it matches the total number of jobs in the input. ` +
         `Output your result in the form of a JSON in the following format: ` +
-        `{ "mapping1": { "jobId": "job-id-here", "jobName": "Job Title Here", "piId": "pi-id-here", "piName": "PI Name Here", "piImpactValue": 10, "piTarget": pi-target-value-here } }. ` +
+        `{ "mapping1": { "jobId": "job-id-here", "jobName": "Job Title Here", "piId": "pi-id-here", "piName": "PI Name Here", "piImpactValue": 10, "piTarget": pi-target-value-here, "notes": "Explanation of this mapping"} }. ` +
         `Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.`;
 
       const result = await Promise.race([
@@ -499,8 +511,9 @@ export async function POST(req: NextRequest) {
                   const mappingService = new MappingService();
 
                   // Get existing mappings to check for duplicates
-                  const existingMappings =
-                    await mappingService.getAllMappingJP(userId!);
+                  const existingMappings = await mappingService.getAllMappingJP(
+                    userId!,
+                  );
 
                   // Save each mapping
                   for (const key in mappingsData) {
@@ -520,7 +533,9 @@ export async function POST(req: NextRequest) {
                         {
                           piImpactValue: mapping.piImpactValue,
                           piTarget: mapping.piTarget,
-                          notes: `Updated during onboarding for ${businessName}`,
+                          notes:
+                            `(Updated during onboarding for ${businessName}) ` +
+                            mapping.notes,
                         },
                       );
                       console.log(
@@ -536,7 +551,9 @@ export async function POST(req: NextRequest) {
                           piName: mapping.piName,
                           piImpactValue: mapping.piImpactValue,
                           piTarget: mapping.piTarget,
-                          notes: `Auto-generated from onboarding for ${businessName}`,
+                          notes:
+                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            mapping.notes,
                         },
                         userId!,
                       );
@@ -589,16 +606,10 @@ export async function POST(req: NextRequest) {
 
       // Create a context string with PIs and QBOs information for the AI
       const pisContext = pis
-        .map(
-          (pi) =>
-            `PI ID: ${pi._id}, Name: ${pi.name}, Target Value: ${pi.targetValue}`,
-        )
+        .map((pi) => `PI Name: ${pi.name}, Notes: ${pi.notes}`)
         .join("\n");
       const qbosContext = qbos
-        .map(
-          (qbo) =>
-            `QBO ID: ${qbo._id}, Name: ${qbo.name}, Target Value: ${qbo.targetValue}`,
-        )
+        .map((qbo) => `QBO Name: ${qbo.name}, Notes: ${qbo.notes}`)
         .join("\n");
 
       // Create a custom prompt for PI-QBO mapping generation
@@ -611,7 +622,7 @@ export async function POST(req: NextRequest) {
         `IMPORTANT: Ensure that EVERY PI is mapped to at least one QBO, and every QBO has at least one PI mapped to it. ` +
         `Do not leave any PI unmapped. If necessary, create logical connections between PIs and QBOs based on their relationship to the business mission. ` +
         `Output your result in the form of a JSON in the following format: ` +
-        `{ "mapping1": { "piId": "pi-id-here", "piName": "PI Name Here", "qboId": "qbo-id-here", "qboName": "QBO Name Here", "piTarget": pi-target-value-here, "qboTarget": qbo-target-value-here, "qboImpact": 10 } }. ` +
+        `{ "mapping1": { "piId": "pi-id-here", "piName": "PI Name Here", "qboId": "qbo-id-here", "qboName": "QBO Name Here", "piTarget": pi-target-value-here, "qboTarget": qbo-target-value-here, "qboImpact": 10 }, "notes": "Explanation of this mapping" }. ` +
         `Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.`;
 
       const result = await Promise.race([
@@ -663,7 +674,9 @@ export async function POST(req: NextRequest) {
                           piTarget: mapping.piTarget,
                           qboTarget: mapping.qboTarget,
                           qboImpact: mapping.qboImpact,
-                          notes: `Updated during onboarding for ${businessName}`,
+                          notes:
+                            `(Updated during onboarding for ${businessName}) ` +
+                            mapping.notes,
                         },
                       );
                       console.log(
@@ -680,7 +693,9 @@ export async function POST(req: NextRequest) {
                           piTarget: mapping.piTarget,
                           qboTarget: mapping.qboTarget,
                           qboImpact: mapping.qboImpact,
-                          notes: `Auto-generated from onboarding for ${businessName}`,
+                          notes:
+                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            mapping.notes,
                         },
                         userId!,
                       );

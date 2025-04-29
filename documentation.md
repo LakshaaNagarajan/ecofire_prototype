@@ -14,6 +14,7 @@
 11. [Settings Feature](#settings-feature)
 12. [Organization Feature](#organization-feature)
 13. [Sorting and Filtering](#sorting-and-filtering)
+14. [Onboarding Tour](#onboarding-tour)
 
 ## Project Overview
 EcoFire Prototype is a job management system built with Next.js, featuring active and completed jobs tracking. The application uses MongoDB for data storage and Clerk for authentication.
@@ -25,6 +26,7 @@ EcoFire Prototype is a job management system built with Next.js, featuring activ
 - **UI Components**: shadcn/ui, Radix UI
 - **Styling**: TailwindCSS
 - **Table Management**: TanStack Table
+- **Tour System**: Driver.js
 - **Development**: TypeScript
 
 ## Project Structure
@@ -34,10 +36,12 @@ ECOFIRE_PROTOTYPE/
 ├── app/
 │   ├── api/                    # API routes
 │   ├── dashboard/              # Dashboard pages
+│   └── backstage/              # Backstage pages including Calendar
 ├──components/                  # Shared components
 │   ├── business-funtions/      # Business function components
 │   ├── dashboard/              # Dashboard components
 │   ├── jobs/                   # Job management components
+│   ├── onboarding/             # Onboarding tour components
 │   └── ui/                    # UI components (shadcn)
 ├── hooks/                    # Custom React hooks
 ├── lib/                     # Utility functions and services
@@ -135,6 +139,30 @@ Location: `components/jobs/sorting-component.tsx`
   - Automatic sorting reset when filters change
   - Custom sort logic for different job properties
 
+### OnboardingContext
+Location: `lib/contexts/onboarding-context.tsx`
+- Purpose: Manages tour state across the application
+- Features:
+  - Stores tour completion status in localStorage
+  - Provides methods to start, stop, and reset the tour
+  - Makes tour state available to all components
+
+### TourController
+Location: `components/onboarding/tour-controller.tsx`
+- Purpose: Controls when the tour is rendered
+- Features:
+  - Handles accessibility features (ESC key to exit)
+  - Mounts/unmounts the DriverTour component
+  - Manages the tour lifecycle
+
+### DriverTour
+Location: `components/onboarding/driver-tour.tsx`
+- Purpose: Implements the main tour using driver.js
+- Features:
+  - Defines tour steps for the main dashboard
+  - Handles redirection to the Google Calendar page
+  - Customizable tour configurations
+
 ## API Documentation
 
 ### Jobs API
@@ -213,6 +241,7 @@ interface UserOrganization extends mongoose.Document {
 - Modal state for job creation/editing
 - View context for organization switching
 - Filter and sort state management in JobsPage
+- Onboarding tour state managed through context
 
 ## Best Practices
 1. Always use TypeScript types for components and data
@@ -607,3 +636,125 @@ case "newFilter":
 
 - **Problem**: Filter doesn't affect certain job properties
   - **Solution**: Update the matchesFilters function to handle the property correctly
+
+## Onboarding Tour
+
+### Overview
+
+The onboarding tour is a guided walkthrough for new users implemented using Driver.js. It highlights key UI elements across multiple pages and provides explanatory tooltips. The tour starts on the main dashboard and continues on the Google Calendar page.
+
+### Component Structure
+
+The tour system consists of three core components:
+
+1. **OnboardingContext** (`onboarding-context.tsx`)
+   * Manages tour state (active/inactive, completion status)
+   * Provides methods to start, end, and reset the tour
+   * Persists tour completion status in localStorage
+
+2. **TourController** (`tour-controller.tsx`)
+   * Controls when the tour is rendered
+   * Handles accessibility features like ESC key to exit
+   * Mounts/unmounts the DriverTour component
+
+3. **DriverTour** (`driver-tour.tsx`)
+   * Implements the main tour using driver.js
+   * Defines tour steps for the main dashboard
+   * Handles redirection to the Google Calendar page
+
+4. **Google Calendar Page** (`CalendarPage`)
+   * Detects URL parameters to continue the tour
+   * Implements its own tour steps for the Calendar features
+
+### Multi-Page Tour Implementation
+
+The tour spans multiple pages through URL parameters:
+
+1. The main tour (`DriverTour`) highlights elements on the dashboard
+2. When the user reaches the Calendar step and clicks "Go to Calendar":
+   * The tour is destroyed
+   * The user is redirected to `/backstage/gcal?tour=gcal&step=0`
+3. The Calendar page detects these parameters and starts its own tour
+4. A `tourStartedRef` prevents the tour from starting multiple times
+
+### Tour Steps
+
+#### Main Dashboard Tour
+* Jobs & Tasks section
+* Organization View toggle
+* Jija assistant
+* Wellness Check
+* Google Calendar integration (with redirection)
+
+#### Google Calendar Tour
+* Authorize Google Calendar button
+* Get Calendars button
+* Add Selected Calendar button
+* Completion message
+
+### How to Modify the Tour
+
+#### Adding/Modifying Steps on Main Dashboard
+
+1. Edit the `mainTourSteps` array in `driver-tour.tsx`:
+
+```typescript
+const mainTourSteps = [
+  {
+    element: '#element-id',  // CSS selector for the element
+    popover: {
+      title: 'Step Title',
+      description: 'Step description text'
+    }
+  },
+  // Additional steps...
+];
+```
+
+#### Adding/Modifying Steps on Google Calendar Page
+
+1. Edit the `tourSteps` array in the `startGcalTour` function:
+
+```typescript
+const tourSteps = [
+  {
+    element: '#element-id',
+    popover: {
+      title: 'Step Title',
+      description: 'Step description text'
+    }
+  },
+  // Additional steps...
+];
+```
+
+#### Adding Additional Pages to the Tour
+
+1. Use the URL parameter approach to link pages:
+   * In the "last" step of your page, add an `onNextClick` handler
+   * Redirect to the new page with `window.location.href = '/new-page?tour=newpage&step=0'`
+   * Implement tour detection in the new page similar to the Google Calendar page
+
+### Troubleshooting
+
+#### Tour Not Starting on Google Calendar Page
+* Check that URL parameters (`tour=gcal&step=0`) are present
+* Verify that elements with correct IDs exist in the DOM
+* Check console logs for initialization errors
+
+#### Tour Loops or Restarts
+* Make sure `tourStartedRef` is properly preventing multiple starts
+* Ensure URL parameters are being cleaned up after tour detection
+
+#### Tour Elements Not Found
+* Verify IDs and CSS selectors in your tour steps
+* Add a delay to ensure DOM elements are fully loaded before starting tour
+* Check for dynamic elements that might not be ready when the tour initializes
+
+### Best Practices
+
+1. Use specific IDs for elements that need to be highlighted
+2. Add detailed logging for debugging tour issues
+3. Test the tour on all browser sizes and devices
+4. Use consistent styling and messaging across all tour steps
+5. Keep descriptions concise and helpful for new users

@@ -5,6 +5,13 @@ import { createDataStreamResponse, streamText } from "ai";
 import { BusinessInfoService } from "@/lib/services/business-info.service";
 import crypto from "crypto";
 import dJSON from "dirty-json"; // Import dirty-json library
+import moment from "moment-timezone";
+
+// Function to generate a date 3 months from today
+function getDateThreeMonthsFromNow(): Date {
+  const threeMonthsFromToday = moment().add(3, "months");
+  return threeMonthsFromToday.toDate();
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -77,13 +84,17 @@ export async function POST(req: NextRequest) {
 
     // Different prompts for each step
     const outcomePrompt =
-      'Please suggest the 3 most important outcome metrics for the next 3 months that I can use to track my progress towards accomplishing my mission and distribute 100 points among these outcome metrics as per their importance towards my mission. Output your result in the form of a JSON in the following format: { "outcome1": { "name": "Outcome 1", "targetValue": 100, "deadline": "2025-12-31", "points": 50, "notes": "Explanation of how this outcome relates to the mission statement" } }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
+      'Please suggest the 3 most important outcome metrics for the next 3 months that I can use to track my progress towards accomplishing my mission and distribute 100 points among these outcome metrics as per their importance towards my mission. Output your result in the form of a JSON in the following format: { "outcome1": { "name": "Outcome 1", "targetValue": 100, "deadline": "2025-12-31", "points": 50 } }. The deadline for each outcome should be ' +
+      getDateThreeMonthsFromNow().toDateString().split("T")[0] +
+      ". Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.";
 
     const jobsPrompt =
       'Please generate the 10 most important jobs to be done in my business for achieving my mission statement. For each job, also generate up to 3 specific tasks that need to be completed to accomplish that job. Output your result in the form of a JSON in the following format: { "job1": { "title": "Job 1 Title", "notes": "Description of what needs to be done", "tasks": [{"title": "Task 1 Title", "notes": "Description of the task"}, {"title": "Task 2 Title", "notes": "Description of the task"}, {"title": "Task 3 Title", "notes": "Description of the task"}] } }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
 
     const pisPrompt =
-      'Considering all of my jobs to be done, what are all the 5 most important quantifiable metrics I can use to track my progress on each of them? It is not necessary for every job to be done to be associated with a unique metric. Avoid outcome metrics. Output your result in the form of a JSON in the following format: { "pi1": { "name": "PI 1", "targetValue": 100, "deadline": "2025-12-31", "notes": "Explanation of which job or jobs this progress indicator relates to and how it relates" } }. Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.';
+      'Considering all of my jobs to be done, what are all the 5 most important quantifiable metrics I can use to track my progress on each of them? It is not necessary for every job to be done to be associated with a unique metric. Avoid outcome metrics. Output your result in the form of a JSON in the following format: { "pi1": { "name": "PI 1", "targetValue": 100, "deadline": "2025-12-31"} }. The deadline for each outcome should be ' +
+      getDateThreeMonthsFromNow().toDateString().split("T")[0] +
+      ".  Your output should strictly follow this format with double quotes for all keys and string values, not single quotes. This should be the only output.";
 
     // Set a timeout for the OpenAI API call
     const timeoutPromise = new Promise((_, reject) => {
@@ -128,8 +139,8 @@ export async function POST(req: NextRequest) {
                   for (const key in outcomeData) {
                     const outcome = outcomeData[key];
 
-                    // Format the date as an actual Date object
-                    const deadlineDate = new Date(outcome.deadline);
+                    // Always set deadline to 3 months from today
+                    const deadlineDate = getDateThreeMonthsFromNow();
 
                     // Check if QBO with same name already exists
                     const existingQBOs = await qboService.getAllQBOs(userId!);
@@ -388,8 +399,8 @@ export async function POST(req: NextRequest) {
                   for (const key in piData) {
                     const pi = piData[key];
 
-                    // Format the date as an actual Date object
-                    const deadlineDate = new Date(pi.deadline);
+                    // Always set deadline to 3 months from today
+                    const deadlineDate = getDateThreeMonthsFromNow();
 
                     // Check if PI with same name already exists
                     const existingPI = existingPIs.find(

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, PawPrint } from "lucide-react";
+import { Edit, Trash2, PawPrint, Copy } from "lucide-react";
+import { DuplicateJobDialog } from "./duplicate-job-dialog";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,9 +43,10 @@ export function JobCard({
   hideCheckbox = false,
   taskCounts = {}
 }: JobCardProps) {
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
   const router = useRouter();
   const [currentJob, setCurrentJob] = useState<Job>(job);
-  
+
   // Update currentJob when props change
   useEffect(() => {
     setCurrentJob(job);
@@ -54,13 +57,14 @@ export function JobCard({
     try {
       const response = await fetch(`/api/jobs/${job.id}`);
       const result = await response.json();
-      
+
       if (result.success && result.data) {
         // Update the local job state with fresh data
         setCurrentJob({
           ...result.data,
           // Preserve the businessFunctionName since it might not be included in the API response
-          businessFunctionName: result.data.businessFunctionName || job.businessFunctionName
+          businessFunctionName:
+            result.data.businessFunctionName || job.businessFunctionName,
         });
       }
     } catch (error) {
@@ -80,15 +84,15 @@ export function JobCard({
 
     // Add event listener
     window.addEventListener(
-      'job-owner-update', 
-      handleOwnerUpdate as EventListener
+      "job-owner-update",
+      handleOwnerUpdate as EventListener,
     );
-    
+
     // Clean up on unmount
     return () => {
       window.removeEventListener(
-        'job-owner-update', 
-        handleOwnerUpdate as EventListener
+        "job-owner-update",
+        handleOwnerUpdate as EventListener,
       );
     };
   }, [job.id]);
@@ -144,15 +148,17 @@ export function JobCard({
   // Get function color
   const getFunctionColor = () => {
     const functionName = currentJob.businessFunctionName?.toLowerCase() || "";
-    if (functionName.includes("product")) return "bg-orange-100 text-orange-800";
+    if (functionName.includes("product"))
+      return "bg-orange-100 text-orange-800";
     if (functionName.includes("design")) return "bg-green-100 text-green-800";
-    if (functionName.includes("engineering")) return "bg-blue-100 text-blue-800";
+    if (functionName.includes("engineering"))
+      return "bg-blue-100 text-blue-800";
     return "bg-gray-100 text-gray-800"; // Default color
   };
 
   return (
-    <div 
-      style={{ width: '100%', minHeight: '180px' }}
+    <div
+      style={{ width: "100%", minHeight: "180px" }}
       className={`bg-[#F4F4F4] border rounded-md shadow-sm ${
         isSelected ? "ring-2 ring-primary" : ""
       }`}
@@ -175,11 +181,9 @@ export function JobCard({
               {currentJob.businessFunctionName || "No function"}
             </span>
           </div>
-          <span className="text-sm font-medium">
-            {getOwnerName()}
-          </span>
+          <span className="text-sm font-medium">{getOwnerName()}</span>
         </div>
-        
+
         {/* Job title */}
         <div className="mb-6 pl-6">
           <h3 className="text-base font-semibold">{currentJob.title}</h3>
@@ -189,17 +193,33 @@ export function JobCard({
         <div className="flex items-center justify-between pl-6">
           <div className="space-y-1">
             <p className="text-sm text-gray-500">{getTaskCount()}</p>
-            <p className="text-sm text-gray-500">Due date: {formatDate(currentJob.dueDate)}</p>
+            <p className="text-sm text-gray-500">
+              Due date: {formatDate(currentJob.dueDate)}
+            </p>
           </div>
         </div>
       </div>
-      
+
       {/* Action buttons */}
-      <div className="flex justify-end p-2 border-t" onClick={(e) => e.stopPropagation()}>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8" 
+      <div
+        className="flex justify-end p-2 border-t"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={async (e) => {
+            e.stopPropagation();
+            setIsDuplicateDialogOpen(true);
+          }}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
           onClick={(e) => {
             e.stopPropagation();
             onEdit(currentJob);
@@ -207,7 +227,7 @@ export function JobCard({
         >
           <Edit className="h-4 w-4" />
         </Button>
-        
+
         <Button
           variant="ghost"
           size="icon"
@@ -244,6 +264,13 @@ export function JobCard({
           </AlertDialogContent>
         </AlertDialog>
       </div>
+
+      <DuplicateJobDialog
+        open={isDuplicateDialogOpen}
+        onOpenChange={setIsDuplicateDialogOpen}
+        sourceJob={currentJob}
+        onSubmit={() => {}} // The actual duplication logic is handled inside DuplicateJobDialog
+      />
     </div>
   );
 }

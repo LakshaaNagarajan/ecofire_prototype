@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, PawPrint, Copy } from "lucide-react";
+import { Trash2, PawPrint, Copy } from "lucide-react";
 import { DuplicateJobDialog } from "./duplicate-job-dialog";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -27,7 +27,7 @@ interface JobCardProps {
   onSelect: (jobId: string, checked: boolean) => void;
   onOpenTasksSidebar: (job: Job) => void;
   isSelected: boolean;
-  taskOwnerMap?: Record<string, string>; 
+  taskOwnerMap?: Record<string, string>;
   hideCheckbox?: boolean;
   taskCounts?: Record<string, { total: number; completed: number }>;
 }
@@ -41,7 +41,7 @@ export function JobCard({
   isSelected,
   taskOwnerMap,
   hideCheckbox = false,
-  taskCounts = {}
+  taskCounts = {},
 }: JobCardProps) {
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
   const router = useRouter();
@@ -100,13 +100,13 @@ export function JobCard({
   // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return "No due date";
-    
+
     // Parse the date and preserve the UTC date
     const date = new Date(dateString);
-    
+
     // Use toISOString to get YYYY-MM-DD in UTC, then create a new date with just that part
-    const utcDateString = date.toISOString().split('T')[0];
-    const displayDate = new Date(utcDateString + 'T00:00:00');
+    const utcDateString = date.toISOString().split("T")[0];
+    const displayDate = new Date(utcDateString + "T00:00:00");
 
     return displayDate.toLocaleDateString("en-US", {
       year: "numeric",
@@ -127,8 +127,9 @@ export function JobCard({
   // Get task count
   const getTaskCount = () => {
     // Get the completed tasks from taskCounts
-    const completed = taskCounts && taskCounts[job.id] ? taskCounts[job.id].completed : 0;
-    
+    const completed =
+      taskCounts && taskCounts[job.id] ? taskCounts[job.id].completed : 0;
+
     // Get the total tasks from either taskCounts or job.tasks array
     let total = 0;
     if (taskCounts && taskCounts[job.id]) {
@@ -136,12 +137,12 @@ export function JobCard({
     } else if (currentJob.tasks && Array.isArray(currentJob.tasks)) {
       total = currentJob.tasks.length;
     }
-    
+
     // If there are no tasks, show "No tasks added"
     if (total === 0) {
       return "No tasks added";
     }
-    
+
     return `${completed} of ${total} tasks done`;
   };
 
@@ -177,7 +178,9 @@ export function JobCard({
                 />
               </div>
             )}
-            <span className={`px-2 py-1 text-xs font-medium rounded ${getFunctionColor()}`}>
+            <span
+              className={`px-2 py-1 text-xs font-medium rounded ${getFunctionColor()}`}
+            >
               {currentJob.businessFunctionName || "No function"}
             </span>
           </div>
@@ -188,7 +191,7 @@ export function JobCard({
         <div className="mb-6 pl-6">
           <h3 className="text-base font-semibold">{currentJob.title}</h3>
         </div>
-        
+
         {/* Bottom section with task count and due date */}
         <div className="flex items-center justify-between pl-6">
           <div className="space-y-1">
@@ -216,17 +219,6 @@ export function JobCard({
         >
           <Copy className="h-4 w-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(currentJob);
-          }}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
 
         <Button
           variant="ghost"
@@ -235,7 +227,9 @@ export function JobCard({
           title="Ask Jija about this job"
           onClick={(e) => {
             e.stopPropagation();
-            router.push(`/jija?jobTitle=${encodeURIComponent(currentJob.title)}`);
+            router.push(
+              `/jija?jobTitle=${encodeURIComponent(currentJob.title)}`,
+            );
           }}
         >
           <PawPrint className="h-4 w-4  text-[#F05523] fill-[#F05523]" />

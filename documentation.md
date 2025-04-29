@@ -13,6 +13,7 @@
 10. [State Management](#state-management)
 11. [Settings Feature](#settings-feature)
 12. [Organization Feature](#organization-feature)
+13. [Sorting and Filtering](#sorting-and-filtering)
 
 ## Project Overview
 EcoFire Prototype is a job management system built with Next.js, featuring active and completed jobs tracking. The application uses MongoDB for data storage and Clerk for authentication.
@@ -118,6 +119,22 @@ Location: `components/organizations/OrganizationSwitcher.tsx`
   - Truncated organization names for better UI
   - Handles view switching process
 
+### FilterComponent
+Location: `components/jobs/filter-component.tsx`
+- Purpose: Provides UI for filtering jobs
+- Features:
+  - Multiple filter options (hours required, focus level, joy level, etc.)
+  - Notifies parent component of filter changes
+  - Responsive design
+
+### SortingComponent
+Location: `components/jobs/sorting-component.tsx`
+- Purpose: Manages sort options and performs sorting of job data
+- Features:
+  - Multiple sort options (recommended, due date, hours required)
+  - Automatic sorting reset when filters change
+  - Custom sort logic for different job properties
+
 ## API Documentation
 
 ### Jobs API
@@ -195,6 +212,7 @@ interface UserOrganization extends mongoose.Document {
 - Toast notifications for user feedback
 - Modal state for job creation/editing
 - View context for organization switching
+- Filter and sort state management in JobsPage
 
 ## Best Practices
 1. Always use TypeScript types for components and data
@@ -424,3 +442,168 @@ The organization feature allows users to switch between their personal view and 
 **Organization Switching**
 * Organization switching triggers a full page reload to refresh all data
 * Application clears saved filters when switching organizations
+
+## Sorting and Filtering
+
+### Overview
+
+The sorting and filtering system provides a comprehensive way to manage and display jobs based on user preferences. This functionality is implemented through a coordinated system of components that manage the data flow and user interactions.
+
+### Component Architecture
+
+The filtering and sorting system consists of three main components:
+
+1. **JobsPage** - The parent component that manages the state and coordinates filtering and sorting
+2. **FilterComponent** - Handles user selection of filters and notifies the parent of changes
+3. **SortingComponent** - Manages sort options and performs the actual sorting of job data
+
+### Data Flow
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│ JobsPage                                                        │
+│                                                                 │
+│ ┌─────────────┐         ┌─────────────┐         ┌─────────────┐ │
+│ │ activeJobs  │────────▶│ filtered    │────────▶│ sorted      │ │
+│ │             │  filter │ ActiveJobs  │   sort  │ ActiveJobs  │ │
+│ └─────────────┘         └─────────────┘         └─────────────┘ │
+│                                                        │        │
+│                                                        ▼        │
+│                                                  Rendered to UI │
+│                                                                 │
+│ ┌──────────────┐       ┌───────────────┐       ┌───────────────┐│
+│ │ FilterComponent│     │SortingComponent│      │JobsGrid/Table  ││
+│ └──────────────┘       └───────────────┘       └───────────────┘│
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Key State Variables in JobsPage
+
+- `activeJobs` - Original list of active jobs
+- `filteredActiveJobs` - Jobs after filters are applied
+- `sortedActiveJobs` - Jobs after sorting is applied (rendered to UI)
+- `activeFilters` - Current active filters
+
+### Filtering Process
+
+1. User selects filters in the FilterComponent
+2. FilterComponent calls `onFilterChange` with filter criteria
+3. JobsPage's `handleFilterChange` processes the filters:
+   - Updates `activeFilters` state
+   - Filters jobs using `matchesFilters` helper function
+   - Updates `filteredActiveJobs`
+   - Applies recommended sorting to filtered jobs
+   - Updates `sortedActiveJobs`
+
+### Sorting Process
+
+1. User selects a sort option in SortingComponent
+2. Or filtering occurs, which automatically resets to "recommended" sort
+3. SortingComponent's `sortJobs` method sorts the jobs based on criteria
+4. SortingComponent calls `onSortChange` with sorted jobs
+5. JobsPage updates `sortedActiveJobs` state
+6. Sorted jobs are rendered to UI
+
+### Notable Functionality
+
+#### Automatic Sorting Reset
+
+When filters change, the SortingComponent automatically resets to "recommended" sorting:
+
+```typescript
+// In SortingComponent
+useEffect(() => {
+  if (jobs.length > 0) {
+    sortJobs("recommended");
+    setSortOption("recommended");
+  }
+}, [jobs]);
+```
+
+#### Sort Types
+
+Currently supported sort options:
+- `recommended` - Due date (ascending), then impact (descending)
+- `dueDate-asc` - Due date (ascending)
+- `dueDate-desc` - Due date (descending)
+- `hoursRequired-asc` - Hours required (ascending)
+- `hoursRequired-desc` - Hours required (descending)
+
+#### Filter Types
+
+Currently supported filter options:
+- Hours required range
+- Focus level
+- Joy level
+- Business function
+- Owner
+- Tags
+
+### Extension Points
+
+#### Adding New Sort Options
+
+1. Add a new option to the `SortOption` type in SortingComponent
+2. Add sort logic in the `sortJobs` method
+3. Add UI elements in the component return statement
+4. Add icon and label in the `getOptionDetails` helper function
+
+Example:
+```typescript
+// Add to SortOption type
+export type SortOption = "recommended" | ... | "newSortOption";
+
+// Add case in sortJobs
+case "newSortOption":
+  sortedJobs.sort((a, b) => {
+    // Custom sort logic
+  });
+  break;
+
+// Add to getOptionDetails
+case "newSortOption":
+  return { label: "New Sort Option", icon: <Icon /> };
+
+// Add UI element
+<SelectItem value="newSortOption">
+  <div className="flex items-center">
+    <Icon className="h-4 w-4 mr-2" />
+    New Sort Option
+  </div>
+</SelectItem>
+```
+
+#### Adding New Filter Options
+
+1. Add UI elements to FilterComponent
+2. Update filter handling in the component
+3. Add case in `matchesFilters` function in JobsPage
+
+Example:
+```typescript
+// In matchesFilters
+case "newFilter":
+  if (job.newFilterProperty !== value) matches = false;
+  break;
+```
+
+### Best Practices
+
+1. **State Management**: Keep sorting and filtering logic in the parent component
+2. **Performance**: Avoid unnecessary re-renders by only updating state when needed
+3. **Extensibility**: Follow the established patterns when adding new features
+4. **Error Handling**: Provide default values for all properties used in sorting/filtering
+5. **User Experience**: When filters change, automatically reset sorting to "recommended"
+
+### Common Issues and Solutions
+
+- **Problem**: Selected sort option resets when filters change
+  - **Solution**: This is intentional; filters should always default to recommended sort
+  - **Override**: If you want different behavior, modify the SortingComponent's useEffect dependency array
+
+- **Problem**: Sort not applying to newly filtered jobs
+  - **Solution**: Ensure sorting is applied immediately after filtering
+  - **Check**: Look at handleFilterChange to make sure sorting is applied after filtering
+
+- **Problem**: Filter doesn't affect certain job properties
+  - **Solution**: Update the matchesFilters function to handle the property correctly

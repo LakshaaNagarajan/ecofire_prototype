@@ -158,7 +158,7 @@ export default function OnboardingPage() {
       toast({
         title: "Error",
         description:
-          "An error occurred while generating PIs, but you can still return to dashboard.",
+          "An error occurred while generating Outputs, but you can still return to dashboard.",
         variant: "destructive",
       });
       // Redirect to jobs page instead of dashboard
@@ -197,7 +197,7 @@ export default function OnboardingPage() {
       toast({
         title: "Error",
         description:
-          "An error occurred while generating Job-PI mappings, but you can still return to dashboard.",
+          "An error occurred while generating Job-Output mappings, but you can still return to dashboard.",
         variant: "destructive",
       });
       // Redirect to jobs page instead of dashboard
@@ -238,7 +238,7 @@ export default function OnboardingPage() {
       toast({
         title: "Error",
         description:
-          "An error occurred while generating PI-QBO mappings, but you can still return to dashboard.",
+          "An error occurred while generating Output-Outcome mappings, but you can still return to dashboard.",
         variant: "destructive",
       });
       // Redirect to jobs page instead of dashboard
@@ -280,7 +280,8 @@ export default function OnboardingPage() {
     // Show a toast to inform the user that PIs are being generated
     toast({
       title: "Generating Outputs",
-      description: "Please wait while we create Outputs based on your JObs...",
+
+      description: "Please wait while we create Outputs based on your jobs...",
     });
 
     try {
@@ -322,6 +323,7 @@ export default function OnboardingPage() {
       // After Job-PI mappings are generated, generate PI-QBO mappings
       toast({
         title: "Generating Outputs-Outcomes Mappings",
+
         description:
           "Please wait while we create mappings between Outputs and Outcomes...",
       });
@@ -360,7 +362,7 @@ export default function OnboardingPage() {
       toast({
         title: "Generation Error",
         description:
-          "There was a problem generating PIs or mappings, but you can still return to dashboard.",
+          "There was a problem generating Outputs or mappings, but you can still return to dashboard.",
         variant: "destructive",
       });
       // Redirect to jobs page instead of dashboard with the onboarding tour

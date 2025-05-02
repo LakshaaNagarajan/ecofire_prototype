@@ -77,6 +77,7 @@ export default function JobsPage() {
   const [taskDetails, setTaskDetails] = useState<Record<string, any>>({});
   const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
   const [isTableViewEnabled, setIsTableViewEnabled] = useState(false);
+  const [creatingJob, setCreatingJob] = useState(false); //State to track job creation
 
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -698,6 +699,7 @@ export default function JobsPage() {
   };
 
   const handleCreate = async (jobData: Partial<Job>) => {
+    setCreatingJob(true); // Set creating job state to true
     try {
       const response = await fetch("/api/jobs", {
         method: "POST",
@@ -717,9 +719,12 @@ export default function JobsPage() {
       if (result.success) {
         toast({
           title: "Success",
-          description: "Job created successfully",
+          description: "Job successfully created",
         });
-        fetchJobs();
+        await fetchJobs(); // Refresh jobs and wait for it to complete
+        
+        // Now we can close the dialog after jobs have been refreshed
+        setDialogOpen(false);
       } else {
         throw new Error(result.error);
       }
@@ -729,6 +734,8 @@ export default function JobsPage() {
         description: "Failed to create job",
         variant: "destructive",
       });
+    } finally {
+      setCreatingJob(false); // Reset creating job state
     }
   };
 

@@ -18,6 +18,7 @@ import {
   ChartNoAxesCombinedIcon,
   BriefcaseBusinessIcon,
   Heart,
+  PanelLeft,
 } from "lucide-react";
 import {
   Sidebar,
@@ -29,6 +30,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   Collapsible,
@@ -194,7 +196,7 @@ export function AppSidebar() {
 
     // Check if we're already on the jobs page
     const currentPath = window.location.pathname;
-    if (currentPath === '/jobs') {
+    if (currentPath === "/jobs") {
       // If already on jobs page, apply filters directly
       window.dispatchEvent(
         new CustomEvent("applyWellnessFilters", {
@@ -203,7 +205,7 @@ export function AppSidebar() {
       );
     } else {
       // Otherwise navigate to jobs page - filters will be applied on page load
-      window.location.href = '/jobs';
+      window.location.href = "/jobs";
     }
   }, []);
 
@@ -218,6 +220,19 @@ export function AppSidebar() {
               className="h-10 w-auto my-4"
             ></img>
           </SidebarGroupLabel>
+
+          {/* Sidebar collapse icone */}
+          <SidebarMenuItem>
+            <SidebarTrigger
+              size="lg"
+              variant="ghost"
+              className="flex w-full items-center gap-2 justify-start px-2 h-10"
+            >
+              <PanelLeft />
+              <span>Collapse Sidebar</span>
+            </SidebarTrigger>
+          </SidebarMenuItem>
+
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
@@ -351,4 +366,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-

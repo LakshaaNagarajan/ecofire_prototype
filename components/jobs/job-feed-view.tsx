@@ -763,6 +763,9 @@ export default function JobsPage() {
           title: "Success",
           description: "Job updated successfully",
         });
+        // Make sure we clear the editing job state to properly close the dialog
+        setEditingJob(undefined);
+        // Then fetch updated jobs
         fetchJobs();
       } else {
         throw new Error(result.error);

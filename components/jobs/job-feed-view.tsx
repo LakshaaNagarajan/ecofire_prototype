@@ -23,7 +23,7 @@ import { JobSkeletonGroup } from "@/components/jobs/job-skeleton";
 // Updated to include business functions and remove owner
 function convertJobsToTableData(
   jobs: Jobs[],
-  businessFunctions: BusinessFunctionForDropdown[]
+  businessFunctions: BusinessFunctionForDropdown[],
 ): Job[] {
   return jobs.map((job) => {
     // Find the business function name if it exists
@@ -62,7 +62,7 @@ export default function JobsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | undefined>(undefined);
   const [selectedActiveJobs, setSelectedActiveJobs] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [selectedCompletedJobs, setSelectedCompletedJobs] = useState<
     Set<string>
@@ -239,7 +239,7 @@ export default function JobsPage() {
       taskIds.forEach((id) => queryParams.append("ids", id));
 
       const tasksResponse = await fetch(
-        `/api/tasks/batch?${queryParams.toString()}`
+        `/api/tasks/batch?${queryParams.toString()}`,
       );
       const tasksResult = await tasksResponse.json();
 
@@ -317,25 +317,25 @@ export default function JobsPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ isDone: true }),
-        })
+        }),
       );
 
       await Promise.all(promises);
 
       // Move selected jobs from active to completed
       const jobsToMove = activeJobs.filter((job) =>
-        selectedActiveJobs.has(job.id)
+        selectedActiveJobs.has(job.id),
       );
       const updatedJobs = jobsToMove.map((job) => ({ ...job, isDone: true }));
 
       setActiveJobs((prev) =>
-        prev.filter((job) => !selectedActiveJobs.has(job.id))
+        prev.filter((job) => !selectedActiveJobs.has(job.id)),
       );
       setCompletedJobs((prev) => [...prev, ...updatedJobs]);
 
       // Also update filtered jobs
       setFilteredActiveJobs((prev) =>
-        prev.filter((job) => !selectedActiveJobs.has(job.id))
+        prev.filter((job) => !selectedActiveJobs.has(job.id)),
       );
       setFilteredCompletedJobs((prev) => [...prev, ...updatedJobs]);
 
@@ -369,25 +369,25 @@ export default function JobsPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ isDone: false }),
-        })
+        }),
       );
 
       await Promise.all(promises);
 
       // Move selected jobs from completed to active
       const jobsToMove = completedJobs.filter((job) =>
-        selectedCompletedJobs.has(job.id)
+        selectedCompletedJobs.has(job.id),
       );
       const updatedJobs = jobsToMove.map((job) => ({ ...job, isDone: false }));
 
       setCompletedJobs((prev) =>
-        prev.filter((job) => !selectedCompletedJobs.has(job.id))
+        prev.filter((job) => !selectedCompletedJobs.has(job.id)),
       );
       setActiveJobs((prev) => [...prev, ...updatedJobs]);
 
       // Also update filtered jobs
       setFilteredCompletedJobs((prev) =>
-        prev.filter((job) => !selectedCompletedJobs.has(job.id))
+        prev.filter((job) => !selectedCompletedJobs.has(job.id)),
       );
       setFilteredActiveJobs((prev) => [...prev, ...updatedJobs]);
 
@@ -449,7 +449,7 @@ export default function JobsPage() {
         // Use the business functions we just fetched
         const allJobs = convertJobsToTableData(
           jobsResult.data,
-          currentBusinessFunctions
+          currentBusinessFunctions,
         );
 
         // Separate active and completed jobs
@@ -636,7 +636,7 @@ export default function JobsPage() {
           // Compare using tag names instead of IDs
           if (
             !selectedTagNames.every((tagName) =>
-              nextTask.tags.includes(tagName)
+              nextTask.tags.includes(tagName),
             )
           ) {
             matches = false;
@@ -656,7 +656,7 @@ export default function JobsPage() {
       if (Object.keys(activeFilters).length > 0) {
         console.log(
           "Reapplying filters on page navigation/load:",
-          activeFilters
+          activeFilters,
         );
 
         // Filter active jobs
@@ -722,7 +722,7 @@ export default function JobsPage() {
           description: "Job successfully created",
         });
         await fetchJobs(); // Refresh jobs and wait for it to complete
-        
+
         // Now we can close the dialog after jobs have been refreshed
         setDialogOpen(false);
       } else {
@@ -812,11 +812,6 @@ export default function JobsPage() {
     setDialogOpen(true);
   };
 
-  const handleOpenCreate = () => {
-    setEditingJob(undefined);
-    setDialogOpen(true);
-  };
-  
   // Function to handle dialog close
   const handleDialogOpenChange = (open: boolean) => {
     setDialogOpen(open);
@@ -853,23 +848,23 @@ export default function JobsPage() {
         const updatedJob = result.data;
         setActiveJobs((prevActiveJobs) =>
           prevActiveJobs.map((job) =>
-            job.id === updatedJob.id ? updatedJob : job
-          )
+            job.id === updatedJob.id ? updatedJob : job,
+          ),
         );
         setCompletedJobs((prevCompletedJobs) =>
           prevCompletedJobs.map((job) =>
-            job.id === updatedJob.id ? updatedJob : job
-          )
+            job.id === updatedJob.id ? updatedJob : job,
+          ),
         );
         setFilteredActiveJobs((prevFilteredActiveJobs) =>
           prevFilteredActiveJobs.map((job) =>
-            job.id === updatedJob.id ? updatedJob : job
-          )
+            job.id === updatedJob.id ? updatedJob : job,
+          ),
         );
         setFilteredCompletedJobs((prevFilteredCompletedJobs) =>
           prevFilteredCompletedJobs.map((job) =>
-            job.id === updatedJob.id ? updatedJob : job
-          )
+            job.id === updatedJob.id ? updatedJob : job,
+          ),
         );
       }
     } catch (error) {
@@ -877,39 +872,41 @@ export default function JobsPage() {
     }
   };
 
-
   if (loading) {
     return (
       <div className="p-4 w-full">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Jobs</h1>
-        <div className="flex gap-2">
-          <div className="w-32 h-10 bg-gray-200 rounded-md animate-pulse"></div>
-          <div className="w-32 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Jobs</h1>
+          <div className="flex gap-2">
+            <div className="w-32 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+            <div className="w-32 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+          </div>
         </div>
-      </div>
-      
-      {/* Filter controls skeletons */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="w-32 h-9 bg-gray-200 rounded-md animate-pulse"></div>
-        ))}
-      </div>
-      
-      {/* Job skeletons */}
-      <div className="flex flex-col xl:flex-row gap-8">
-        <div className="w-full xl:w-1/2 xl:pr-6">
-          <JobSkeletonGroup count={4} />
+
+        {/* Filter controls skeletons */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className="w-32 h-9 bg-gray-200 rounded-md animate-pulse"
+            ></div>
+          ))}
         </div>
-        
-        {/* QBO Circles skeleton */}
-        <div className="w-full xl:w-1/2 mb-8 xl:sticky xl:top-20 xl:self-start xl:pl-6 xl:border-l border-gray-200">
-          <div className="h-64 rounded-md bg-gray-100 flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full bg-gray-200 animate-pulse"></div>
+
+        {/* Job skeletons */}
+        <div className="flex flex-col xl:flex-row gap-8">
+          <div className="w-full xl:w-1/2 xl:pr-6">
+            <JobSkeletonGroup count={4} />
+          </div>
+
+          {/* QBO Circles skeleton */}
+          <div className="w-full xl:w-1/2 mb-8 xl:sticky xl:top-20 xl:self-start xl:pl-6 xl:border-l border-gray-200">
+            <div className="h-64 rounded-md bg-gray-100 flex items-center justify-center">
+              <div className="w-32 h-32 rounded-full bg-gray-200 animate-pulse"></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     );
   }
 
@@ -986,9 +983,6 @@ export default function JobsPage() {
                 Recalculate Impact
               </Button>
             )}
-            <Button onClick={handleOpenCreate}>
-              <Plus className="mr-2 h-4 w-4" /> Create Job
-            </Button>
           </div>
         </div>
 
@@ -1029,7 +1023,7 @@ export default function JobsPage() {
                   handleDelete,
                   handleActiveSelect,
                   handleOpenTasksSidebar,
-                  taskOwnerMap
+                  taskOwnerMap,
                 )}
                 data={sortedActiveJobs} // Use sorted jobs instead of filtered
               />
@@ -1042,7 +1036,7 @@ export default function JobsPage() {
               onSelectJob={(jobId) => {
                 // Find the job and open its tasks sidebar
                 const job = [...activeJobs, ...completedJobs].find(
-                  (j) => j.id === jobId
+                  (j) => j.id === jobId,
                 );
                 if (job) {
                   handleOpenTasksSidebar(job);
@@ -1083,7 +1077,7 @@ export default function JobsPage() {
                   handleDelete,
                   handleCompletedSelect,
                   handleOpenTasksSidebar,
-                  taskOwnerMap
+                  taskOwnerMap,
                 )}
                 data={sortedCompletedJobs} // Use sorted jobs instead of filtered
               />
@@ -1150,3 +1144,4 @@ export default function JobsPage() {
     </div>
   );
 }
+

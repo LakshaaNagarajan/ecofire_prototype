@@ -954,35 +954,38 @@ export default function JobsPage() {
               </div>
             )}
 
-            <Button
-              variant="outline"
-              onClick={async () => {
-                try {
-                  const response = await fetch("/api/jobs/calculate-impact", {
-                    method: "POST",
-                  });
-                  const result = await response.json();
-
-                  if (result.success) {
-                    toast({
-                      title: "Success",
-                      description: `${result.message}`,
+            {/* Show Recalculate Impact button only in table view */}
+            {viewMode === "table" && (
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch("/api/jobs/calculate-impact", {
+                      method: "POST",
                     });
-                    fetchJobs(); // Refresh jobs to show updated impact values
-                  } else {
-                    throw new Error(result.error);
+                    const result = await response.json();
+
+                    if (result.success) {
+                      toast({
+                        title: "Success",
+                        description: `${result.message}`,
+                      });
+                      fetchJobs(); // Refresh jobs to show updated impact values
+                    } else {
+                      throw new Error(result.error);
+                    }
+                  } catch (error) {
+                    toast({
+                      title: "Error",
+                      description: "Failed to calculate job impact values",
+                      variant: "destructive",
+                    });
                   }
-                } catch (error) {
-                  toast({
-                    title: "Error",
-                    description: "Failed to calculate job impact values",
-                    variant: "destructive",
-                  });
-                }
-              }}
-            >
-              Recalculate Impact
-            </Button>
+                }}
+              >
+                Recalculate Impact
+              </Button>
+            )}
             <Button onClick={handleOpenCreate}>
               <Plus className="mr-2 h-4 w-4" /> Create Job
             </Button>

@@ -763,9 +763,11 @@ export default function JobsPage() {
           title: "Success",
           description: "Job updated successfully",
         });
-        // Make sure we clear the editing job state to properly close the dialog
+        // First close the dialog
+        setDialogOpen(false);
+        // Then clear the editing job state
         setEditingJob(undefined);
-        // Then fetch updated jobs
+        // Finally fetch updated jobs
         fetchJobs();
       } else {
         throw new Error(result.error);
@@ -813,6 +815,15 @@ export default function JobsPage() {
   const handleOpenCreate = () => {
     setEditingJob(undefined);
     setDialogOpen(true);
+  };
+  
+  // Function to handle dialog close
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      // If dialog is closing, reset editing job
+      setEditingJob(undefined);
+    }
   };
 
   // Function to handle opening the tasks sidebar
@@ -1080,7 +1091,7 @@ export default function JobsPage() {
         <JobDialog
           mode={editingJob ? "edit" : "create"}
           open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          onOpenChange={handleDialogOpenChange}
           onSubmit={editingJob ? handleEdit : handleCreate}
           initialData={editingJob}
         />

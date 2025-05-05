@@ -37,6 +37,7 @@ export function DuplicateJobDialog({
   sourceJob,
 }: DuplicateJobDialogProps) {
   const [formData, setFormData] = useState<Partial<Job>>({});
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,11 +51,13 @@ export function DuplicateJobDialog({
           ? new Date(sourceJob.dueDate).toISOString().split("T")[0]
           : "",
       });
+      setIsLoading(false);
     }
   }, [open, sourceJob]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     const submissionData = { ...formData };
     if (submissionData.dueDate) {
       submissionData.dueDate = `${submissionData.dueDate}T00:00:00.000Z`;
@@ -197,6 +200,7 @@ export function DuplicateJobDialog({
       }
     } catch (error) {
       console.error("Error during job duplication:", error);
+      setIsLoading(false);
       toast({
         title: "Duplication Failed",
         description:
@@ -263,7 +267,9 @@ export function DuplicateJobDialog({
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Create Duplicate</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Duplicating job" : "Create Duplicate"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -73,6 +73,11 @@ export function JobDialog({
     } else if (mode === "create") {
       setFormData(emptyFormState);
     }
+    
+    // Reset isSubmitting when dialog opens or closes
+    if (!open) {
+      setIsSubmitting(false);
+    }
   }, [mode, initialData, open]);
 
   // Fetch business functions with auto-selection

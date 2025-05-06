@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
                           deadline: deadlineDate,
                           points: outcome.points,
                           notes:
-                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            `[AI-generated during onboarding for ${businessName}] ` +
                             outcome.notes,
                         },
                         userId!,
@@ -280,7 +280,7 @@ export async function POST(req: NextRequest) {
                           title: job.title,
                           isDone: false,
                           notes:
-                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            `[AI-generated during onboarding for ${businessName}] ` +
                             job.notes,
                           tasks: [], // Initialize empty tasks array
                         },
@@ -306,7 +306,9 @@ export async function POST(req: NextRequest) {
                         const task = await taskService.createTask(
                           {
                             title: taskData.title,
-                            notes: taskData.notes || `Task for ${job.title}`,
+                            notes:
+                              `[AI-generated during onboarding for ${businessName}] ` +
+                              taskData.notes,
                             jobId: jobId, // Associate with the job
                             completed: false,
                           },
@@ -426,7 +428,7 @@ export async function POST(req: NextRequest) {
                           targetValue: pi.targetValue,
                           deadline: deadlineDate,
                           notes:
-                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            `[AI-generated during onboarding for ${businessName}] ` +
                             pi.notes,
                         },
                         userId!,
@@ -568,7 +570,7 @@ export async function POST(req: NextRequest) {
                           piImpactValue: mapping.piImpactValue,
                           piTarget: mapping.piTarget,
                           notes:
-                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            `[AI-generated during onboarding for ${businessName}] ` +
                             mapping.notes,
                         },
                         userId!,
@@ -715,7 +717,7 @@ export async function POST(req: NextRequest) {
                           qboTarget: mapping.qboTarget,
                           qboImpact: mapping.qboImpact,
                           notes:
-                            `(Auto-generated from onboarding for ${businessName}) ` +
+                            `[AI-generated during onboarding for ${businessName}] ` +
                             mapping.notes,
                         },
                         userId!,

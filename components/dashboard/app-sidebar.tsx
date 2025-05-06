@@ -207,7 +207,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="h-16">
             <img
-              src="/PRIORIWISE_ECOFIRE_WHITE.png"
+              src="/PRIORIWISE_BLUE.png"
               alt="PRIORIWISE"
               className="h-10 w-auto my-4"
             ></img>

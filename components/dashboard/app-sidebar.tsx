@@ -387,13 +387,11 @@ export function AppSidebar() {
               </PopoverContent>
             </Popover>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <div
-              className={`w-full ${state === "collapsed" ? "flex justify-center" : ""}`}
-            >
+          {state !== "collapsed" && (
+            <SidebarMenuItem>
               <OrganizationSwitcher />
-            </div>
-          </SidebarMenuItem>
+            </SidebarMenuItem>
+          )}
 
           <SidebarMenuItem>
             <SidebarMenuButton

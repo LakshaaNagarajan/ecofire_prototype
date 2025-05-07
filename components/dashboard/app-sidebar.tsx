@@ -5,7 +5,6 @@ import {
   Calendar,
   Home,
   Inbox,
-  Search,
   Settings,
   Download,
   PawPrint,
@@ -54,11 +53,6 @@ const items = [
     icon: Home,
   },
   {
-    title: "Onboarding",
-    url: "/onboarding",
-    icon: ClipboardCheck,
-  },
-  {
     title: "Quick Guide",
     url: "#",
     icon: Inbox,
@@ -71,7 +65,7 @@ const items = [
   {
     title: "Business Functions",
     url: "/business-functions",
-    icon: Search,
+    icon: BriefcaseBusinessIcon,
   },
   {
     title: "Business Info",
@@ -85,14 +79,9 @@ const items = [
     id: "jija",
   },
   {
-    title: "Search",
-    url: "/search",
-    icon: Search,
-  },
-  {
     title: "Organizations",
     url: "/organizations",
-    icon: BriefcaseBusinessIcon,
+    icon: Users,
   },
   {
     title: "Calendar",
@@ -105,19 +94,24 @@ const items = [
 // Backstage sub-items
 const backstageItems = [
   {
-    title: "Output & Outcome Mapping",
-    url: "/backstage/mappings",
-    icon: Target,
-  },
-  {
-    title: "Outcome Board",
+    title: "Outcomes",
     url: "/backstage/qos",
     icon: Clipboard,
   },
   {
-    title: "Output Board",
+    title: "Outputs",
     url: "/backstage/pis",
     icon: BarChart2,
+  },
+  {
+    title: "Mappings",
+    url: "/backstage/mappings",
+    icon: Target,
+  },
+  {
+    title: "Onboarding",
+    url: "/onboarding",
+    icon: ClipboardCheck,
   },
 ];
 
@@ -215,7 +209,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="h-16">
             <img
-              src="/PRIORIWISE_ECOFIRE_WHITE.png"
+              src="/PRIORIWISE_BLUE.png"
               alt="PRIORIWISE"
               className="h-10 w-auto my-4"
             ></img>

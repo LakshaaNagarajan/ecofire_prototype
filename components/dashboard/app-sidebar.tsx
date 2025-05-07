@@ -209,7 +209,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="h-16 flex justify-center items-center">
+          <SidebarGroupLabel className="h-16 flex items-center">
             {state !== "collapsed" && (
               <img
                 src="/PRIORIWISE_BLUE.png"
@@ -252,7 +252,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       size={"lg"}
                       asChild
-                      className="flex items-center justify-center"
+                      className="flex items-center"
                     >
                       <Link href={item.url}>
                         <IconComponent
@@ -288,9 +288,9 @@ export function AppSidebar() {
                         </Link>
                       </SidebarMenuButton>
                     ) : (
-                      <CollapsibleTrigger className="flex items-center justify-center w-full py-2 px-3 text-sm font-medium rounded-md hover:bg-accent hover:text-sidebar-accent-foreground">
+                      <CollapsibleTrigger className="flex items-center w-full py-2 px-3 text-sm font-medium rounded-md hover:bg-accent hover:text-sidebar-accent-foreground">
                         <ChartNoAxesCombinedIcon className="mr-2 h-4 w-4" />
-                        <span className="flex-1">Backstage</span>
+                        <span>Backstage</span>
                         <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                       </CollapsibleTrigger>
                     )}
@@ -303,7 +303,7 @@ export function AppSidebar() {
                             <SidebarMenuButton
                               size={"lg"}
                               asChild
-                              className="flex items-center justify-center"
+                              className="flex items-center"
                             >
                               <Link href={item.url}>
                                 <item.icon />
@@ -330,7 +330,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   size={"lg"}
                   id="wellness-check"
-                  className="flex items-center justify-center"
+                  className="flex items-center"
                 >
                   <Heart
                     className={`text-purple-500 fill-purple-500 ${state === "collapsed" ? "mx-auto" : ""}`}
@@ -397,7 +397,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               size={"lg"}
               asChild
-              className="flex items-center justify-center"
+              className="flex items-center"
             >
               <Link href="/dashboard/settings">
                 <Settings className={state === "collapsed" ? "mx-auto" : ""} />

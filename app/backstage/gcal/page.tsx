@@ -118,7 +118,7 @@ export default function CalendarPage() {
 
       toast({
         title: "Success",
-        description: `${selectedRows.length} calendar(s) added successfully with ${allEvents.length} events`,
+        description: `Watching ${selectedRows.length} calendar(s) for upcoming events`,
       });
 
       setSelectedRows([]);

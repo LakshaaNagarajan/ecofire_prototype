@@ -151,7 +151,7 @@ export default function RootLayout({
                       </p>
                       <SignInButton>
                         <button className="sign-in-btn">
-                          Sign in with Email
+                          Sign in to the app
                         </button>
                       </SignInButton>
                     </div>

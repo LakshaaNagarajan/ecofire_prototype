@@ -31,7 +31,8 @@ export class JobPIMappingGenerator {
       const jobContext = `Job ID: ${job._id}, JobTitle: ${job.title}, Notes: ${job.notes}`;
       const pisContext = pis
         .map(
-          (pi) => `PI ID: ${pi._id}, PI Name: ${pi.name}, Notes: ${pi.notes}`,
+          (pi) =>
+            `PI Name: ${pi.name}, Notes: ${pi.notes}, PI target value: ${pi.targetValue}`,
         )
         .join("\n");
 

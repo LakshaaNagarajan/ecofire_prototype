@@ -3,7 +3,7 @@ import MappingJobToPI from '../models/pi-job-mapping.model';
 import { JobPiMapping } from '../models/pi-job-mapping.model';
 import dbConnect from '../mongodb';
 
-export class MappingService {
+export class PIJobMappingService {
   async getAllMappingJP(userId: string): Promise<JobPiMapping[]> {
     try {
       await dbConnect();
@@ -24,7 +24,7 @@ export class MappingService {
     }
   }
 
-  async CreateMapping(mappingData: Partial<JobPiMapping>, userId: string): Promise<JobPiMapping> {
+  async createMapping(mappingData: Partial<JobPiMapping>, userId: string): Promise<JobPiMapping> {
     try {
       await dbConnect();
       const MappingData = new MappingJobToPI({
@@ -35,6 +35,16 @@ export class MappingService {
       return JSON.parse(JSON.stringify(SavedMapping));
     } catch (error) {
       throw new Error('Error creating MappingJobToPI in database');
+    }
+  }
+  
+  async getMappingsByJobId(jobId: string): Promise<JobPiMapping[]> {
+    try {
+      await dbConnect();
+      const mappings = await MappingJobToPI.find({ jobId }).lean();
+      return mappings ? JSON.parse(JSON.stringify(mappings)) : [];
+    } catch (error) {
+      throw new Error('Error fetching mappings by job ID');
     }
   }
 

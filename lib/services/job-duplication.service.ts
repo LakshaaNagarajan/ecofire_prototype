@@ -65,7 +65,7 @@ export class JobDuplicationService {
       // Create new tasks for the duplicated job
       for (const task of tasksResult) {
         // Prepare the new task data
-        const newTask = {
+        const newTask: Partial<Task> = {
           ...task,
           jobId: newJobId,
           completed: false,
@@ -128,7 +128,7 @@ export class JobDuplicationService {
           };
 
           // Create the mapping
-          await this.mappingService.createMapping(newMapping, userId);
+          await this.mappingService.CreateMapping(newMapping, userId);
         }
       }
     } catch (error) {

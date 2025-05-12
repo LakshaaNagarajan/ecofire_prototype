@@ -27,7 +27,7 @@ export class MappingService {
     }
   }
 
-  async createMapping(
+  async CreateMapping(
     mappingData: Partial<JobPiMapping>,
     userId: string,
   ): Promise<JobPiMapping> {

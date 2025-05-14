@@ -54,9 +54,6 @@ export function DuplicateJobDialog({
 
     // Format due date for API
     const submissionData = { ...formData };
-    if (submissionData.dueDate) {
-      submissionData.dueDate = `${submissionData.dueDate}T00:00:00.000Z`;
-    }
 
     try {
       // Send request to backend endpoint for job duplication
@@ -67,7 +64,7 @@ export function DuplicateJobDialog({
         },
         body: JSON.stringify({
           sourceJobId: sourceJob.id, // Pass the source job ID
-          newJobData: submissionData // Pass the new job data
+          newJobData: submissionData, // Pass the new job data
         }),
       });
 
@@ -165,3 +162,4 @@ export function DuplicateJobDialog({
     </Dialog>
   );
 }
+

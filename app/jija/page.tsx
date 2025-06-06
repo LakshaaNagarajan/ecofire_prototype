@@ -49,6 +49,8 @@ export default function Chat() {
   const searchParams = useSearchParams();
   const jobTitle = searchParams.get("jobTitle");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [hasAutoLoadedLatestChat, setHasAutoLoadedLatestChat] = useState(false);
+
 
   const {
     error,
@@ -218,6 +220,26 @@ export default function Chat() {
   useEffect(() => {
     fetchRecentChats();
   }, [userId]);
+
+  useEffect(() => {
+    // Only auto-load if:
+    // - We have recent chats
+    // - No chat is currently selected
+    // - We haven't already auto-loaded
+    if (
+      !selectedChatId &&
+      recentChats.length > 0 &&
+      !hasAutoLoadedLatestChat
+    ) {
+      const latestChat = recentChats[0]; // Most recent chat is first
+      if (latestChat && latestChat.chatId) {
+        loadChatSession(latestChat.chatId);
+        setHasAutoLoadedLatestChat(true); // Prevent future auto-loads
+      }
+    }
+  }, [recentChats, selectedChatId, hasAutoLoadedLatestChat]);
+  
+
 
   // Get a preview of the conversation (first user message and assistant response)
   const getChatPreview = (chat: ChatSession) => {

@@ -247,10 +247,12 @@ export default function Chat() {
     // - We have recent chats
     // - No chat is currently selected
     // - We haven't already auto-loaded
+    // - There's no jobTitle parameter (NEW CONDITION)
     if (
       !selectedChatId &&
       recentChats.length > 0 &&
-      !hasAutoLoadedLatestChat
+      !hasAutoLoadedLatestChat &&
+      !jobTitle  // Don't auto-load if jobTitle is present
     ) {
       const latestChat = recentChats[0]; // Most recent chat is first
       if (latestChat && latestChat.chatId) {
@@ -261,12 +263,6 @@ export default function Chat() {
   }, [recentChats, selectedChatId, hasAutoLoadedLatestChat]);
   
 
-  useEffect(() => {
-    // Choose a random welcome message on mount
-    const randomIndex = Math.floor(Math.random() * welcomeMessages.length);
-    setWelcomeText(welcomeMessages[randomIndex]);
-  }, []);
-  
 
   // Get a preview of the conversation (first user message and assistant response)
   const getChatPreview = (chat: ChatSession) => {

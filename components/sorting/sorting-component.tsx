@@ -8,15 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown, ArrowDown, ArrowUp, Clock } from "lucide-react";
+import { ArrowUpDown, ArrowDown, ArrowUp, Clock, Calendar } from "lucide-react";
 import { Job } from "@/components/jobs/table/columns";
 
-export type SortOption =
-  | "recommended"
-  | "dueDate-asc"
-  | "dueDate-desc"
-  | "hoursRequired-asc"
-  | "hoursRequired-desc";
+export type SortOption = "recommended" | "dueDate-asc" | "dueDate-desc" | "hoursRequired-asc" | "hoursRequired-desc" | "createdDate-asc" | "createdDate-desc";
 
 interface SortingComponentProps {
   onSortChange: (sortedJobs: Job[]) => void;
@@ -97,6 +92,22 @@ const SortingComponent: React.FC<SortingComponentProps> = ({
         });
         break;
 
+      case "createdDate-asc":
+        sortedJobs.sort((a, b) => {
+          return new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime();
+        });
+        break;
+
+      case "createdDate-desc":
+        
+        sortedJobs.sort((a, b) => {
+          const timeA = new Date(a.createdDate).getTime();
+          const timeB = new Date(b.createdDate).getTime();
+          return timeB - timeA;
+        });
+        
+        break;
+
       case "hoursRequired-asc":
         sortedJobs.sort((a, b) => {
           const taskA = a.nextTaskId ? taskDetails[a.nextTaskId] : null;
@@ -139,10 +150,11 @@ const SortingComponent: React.FC<SortingComponentProps> = ({
           icon: <ArrowUp className="h-4 w-4 mr-2" />,
         };
       case "dueDate-desc":
-        return {
-          label: "Due Date (latest first)",
-          icon: <ArrowDown className="h-4 w-4 mr-2" />,
-        };
+        return { label: "Due Date (latest first)", icon: <ArrowDown className="h-4 w-4 mr-2" /> };
+      case "createdDate-asc":
+        return { label: "Created Date (earliest first)", icon: <Calendar className="h-4 w-4 mr-2" /> };
+      case "createdDate-desc":
+        return { label: "Created Date (latest first)", icon: <Calendar className="h-4 w-4 mr-2" /> };
       case "hoursRequired-asc":
         return {
           label: "Hours Required (low to high)",
@@ -189,6 +201,18 @@ const SortingComponent: React.FC<SortingComponentProps> = ({
               <div className="flex items-center">
                 <ArrowDown className="h-4 w-4 mr-2" />
                 Due Date (latest first)
+              </div>
+            </SelectItem>
+            <SelectItem value="createdDate-asc">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2" />
+                Created Date (earliest first)
+              </div>
+            </SelectItem>
+            <SelectItem value="createdDate-desc">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2" />
+                Created Date (latest first)
               </div>
             </SelectItem>
             <SelectItem value="hoursRequired-asc">

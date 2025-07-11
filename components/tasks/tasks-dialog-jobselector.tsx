@@ -22,6 +22,7 @@ import { TagInput } from "@/components/tasks/tag-input";
 import { saveTags } from "@/lib/services/task-tags.service";
 import { JobDialog } from "@/components/jobs/job-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Define Owner interface to match MongoDB document
 interface Owner {
@@ -86,10 +87,10 @@ export function TaskDialog({
 
   // Initialize jobId from props
   useEffect(() => {
-    if (propJobId) {
+    if (propJobId && mode === "create" && open) {
       setJobId(propJobId);
     }
-  }, [propJobId]);
+  }, [propJobId, mode, open]);
 
   useEffect(() => {
     const fetchOwners = async () => {
@@ -124,7 +125,9 @@ export function TaskDialog({
       setJoyLevel(undefined);
       setNotes(undefined);
       setTags([]);
-      if (!propJobId) {
+      if (propJobId) {
+        setJobId(propJobId);
+      } else {
         setJobId(undefined);
       }
     } else if (initialData) {
@@ -318,7 +321,9 @@ export function TaskDialog({
         setJoyLevel(undefined);
         setNotes(undefined);
         setTags([]);
-        if (!propJobId) {
+        if (propJobId) {
+          setJobId(propJobId);
+        } else {
           setJobId(undefined);
         }
       }
@@ -360,58 +365,45 @@ export function TaskDialog({
                 />
               </div>
 
-              {/* Job Selection - only show if no jobId was provided via props */}
-              {!propJobId && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="job" className="text-right">
-                    Job <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="col-span-3 space-y-2">
-                    <Select
-                      value={jobId || "none"}
-                      required
-                      onValueChange={(value) => {
-                        setJobError(null);
-                        if (value === "create") {
-                          setIsJobDialogOpen(true);
-                        } else {
-                          setJobId(value === "none" ? undefined : value);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a job" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {Object.entries(jobsList)
-                          .filter(([id, job]: [string, any]) => !job.isDone)
-                          .map(([id, job]: [string, any]) => (
-                            <SelectItem key={id} value={id}>
-                              {job.title}
-                            </SelectItem>
-                          ))}
-                        <SelectItem value="create">+ Create New Job</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {jobError && (
-                      <p className="text-sm text-red-500 mt-1">{jobError}</p>
-                    )}
-                  </div>
+              {/* Job Selection - Always show the dropdown */}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="job" className="text-right">
+                  Job <span className="text-red-500">*</span>
+                </Label>
+                <div className="col-span-3 space-y-2">
+                  <Select
+                    value={jobId || "none"}
+                    required
+                    onValueChange={(value) => {
+                      setJobError(null);
+                      if (value === "create") {
+                        setIsJobDialogOpen(true);
+                      } else {
+                        setJobId(value === "none" ? undefined : value);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a job" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {Object.entries(jobsList)
+                      .filter(([id, job]: [string, any]) => !job.isDone)
+                      .map(([id, job]: [string, any]) => (
+                          <SelectItem key={id} value={id}>
+                            {job.title}
+                          </SelectItem>
+                        ),
+                      )}
+                      <SelectItem value="create">+ Create New Job</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {jobError && (
+                    <p className="text-sm text-red-500 mt-1">{jobError}</p>
+                  )}
                 </div>
-              )}
-
-              {/* Display selected job name if jobId is provided via props */}
-              {propJobId && (
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Job</Label>
-                  <div className="col-span-3">
-                    <p className="text-sm font-medium">
-                      {jobsList[propJobId]?.title || "Selected Job"}
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
 
               {/* Owner */}
               <div className="grid grid-cols-4 items-center gap-4">

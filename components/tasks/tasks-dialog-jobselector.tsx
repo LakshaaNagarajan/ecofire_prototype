@@ -138,11 +138,11 @@ export function TaskDialog({
     const timeoutId = setTimeout(() => {
       if (mode === "create") {
         setTitle("");
-        setOwner(undefined);
+        setOwner("none");
         setDate("");
-        setRequiredHours(undefined);
-        setFocusLevel(undefined);
-        setJoyLevel(undefined);
+        setRequiredHours(0);
+        setFocusLevel(FocusLevel.None);
+        setJoyLevel(JoyLevel.None);
         setNotes(undefined);
         setTags([]);
         setIsRecurring(false);
@@ -334,11 +334,11 @@ export function TaskDialog({
 
       if (mode === "create") {
         setTitle("");
-        setOwner(undefined);
+        setOwner("none");
         setDate("");
-        setRequiredHours(undefined);
-        setFocusLevel(undefined);
-        setJoyLevel(undefined);
+        setRequiredHours(0);
+        setFocusLevel(FocusLevel.None);
+        setJoyLevel(JoyLevel.None);
         setNotes(undefined);
         setTags([]);
         setIsRecurring(false);
@@ -468,7 +468,7 @@ export function TaskDialog({
                           if (value === "create") {
                             setIsCreatingOwner(true);
                           } else {
-                            setOwner(value === "none" ? undefined : value);
+                            setOwner(value === "none" ? "none" : value);
                           }
                         }}
                         disabled={isLoadingOwners}
@@ -601,18 +601,14 @@ export function TaskDialog({
                 </Label>
                 <div className="col-span-3">
                   <Select
-                    value={focusLevel || "none"}
-                    onValueChange={(value) =>
-                      value === "none"
-                        ? setFocusLevel(undefined)
-                        : setFocusLevel(value as FocusLevel)
-                    }
+                    value={focusLevel ?? FocusLevel.None}
+                    onValueChange={(value) => setFocusLevel(value as FocusLevel)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select focus level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value={FocusLevel.None}>None</SelectItem>
                       <SelectItem value={FocusLevel.High}>
                         {FocusLevel.High}
                       </SelectItem>
@@ -634,18 +630,14 @@ export function TaskDialog({
                 </Label>
                 <div className="col-span-3">
                   <Select
-                    value={joyLevel || "none"}
-                    onValueChange={(value) =>
-                      value === "none"
-                        ? setJoyLevel(undefined)
-                        : setJoyLevel(value as JoyLevel)
-                    }
+                    value={joyLevel ?? JoyLevel.None}
+                    onValueChange={(value) => setJoyLevel(value as JoyLevel)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select joy level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value={JoyLevel.None}>None</SelectItem>
                       <SelectItem value={JoyLevel.High}>
                         {JoyLevel.High}
                       </SelectItem>

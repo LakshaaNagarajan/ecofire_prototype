@@ -53,6 +53,7 @@ import {
   Tag,
   Edit,
   ChevronRight,
+  Sun,
   ChevronsUpDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -553,12 +554,17 @@ const cancelEditing = () => {
   };
 
   const handleNavigateToJob = () => {
+    console.log('TaskDetailsSidebar handleNavigateToJob called');
+    console.log('jobInfo:', jobInfo);
     if (jobInfo && onNavigateToJob) {
+      console.log('Calling onNavigateToJob with jobId:', jobInfo.id);
       onOpenChange(false);
       
       setTimeout(() => {
         onNavigateToJob(jobInfo.id);
       }, 150);
+    } else {
+      console.log('No jobInfo or onNavigateToJob not provided');
     }
   };
 
@@ -737,6 +743,29 @@ const cancelEditing = () => {
 
   const handleTagsChange = (newTags: string[]) => {
     setEditingTags(newTags);
+  };
+
+  const handleToggleMyDay = async () => {
+    if (!taskDetails) return;
+    const today = new Date().toLocaleDateString('en-CA');
+    const value = !taskDetails.myDay;
+    try {
+      const res = await fetch(`/api/tasks/${taskDetails.id}/myday`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ myDay: value, myDayDate: value ? today : null }),
+      });
+      const result = await res.json();
+      if (result.success && result.data) {
+        setTaskDetails({ ...taskDetails, myDay: value, myDayDate: value ? today : undefined });
+        toast({ title: value ? "Added to My Day" : "Removed from My Day" });
+        if (onTaskUpdated) onTaskUpdated(result.data);
+      } else {
+        toast({ title: "Failed to update My Day", description: result.error || "Unknown error", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Failed to update My Day", description: (err as Error).message, variant: "destructive" });
+    }
   };
 
   const renderEditableField = (
@@ -927,6 +956,17 @@ const cancelEditing = () => {
     >
       <Check className="h-4 w-4" />
       {taskDetails.completed ? "Mark as incomplete" : "Mark as complete"}
+    </Button>
+    {/* My Day Toggle Button */}
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleToggleMyDay}
+      className={`flex items-center gap-2 ${taskDetails.myDay ? 'bg-gray-200' : ''}`}
+      title={taskDetails.myDay ? "Remove from My Day" : "Add to My Day"}
+    >
+      <Sun className={`h-4 w-4 ${taskDetails.myDay ? 'text-gray-600' : 'text-gray-600'}`} />
+      {taskDetails.myDay ? "Remove from My Day" : "Add to My Day"}
     </Button>
     
     <Button

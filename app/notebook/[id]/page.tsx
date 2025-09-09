@@ -97,7 +97,7 @@ export default function NoteDetailPage() {
           style={{ boxShadow: 'none', background: 'white', border: 'none' }}
         />
       </div>
-      <div className="text-xs text-gray-400 text-right">{saving ? "Saving...." : "All changes saved"}</div>
+      <div className="text-xs text-gray-400 text-right">{saving ? "Saving....." : "All changes saved"}</div>
     </div>
   );
 } 

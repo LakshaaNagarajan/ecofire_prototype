@@ -25,7 +25,7 @@ interface TaskCardProps {
     task: Task;
     onEdit?: (task: Task) => void;
     onDelete?: (id: string) => void;
-    onComplete?: (id: string, jobid:string, completed: boolean) => void;
+    onComplete?: (id: string, jobid: string, completed: boolean) => void;
     ownerMap: Record<string, string>;
     onOpenTaskDetails?: (task: Task) => void;
     onToggleMyDay?: (task: Task, value: boolean) => void;
@@ -35,6 +35,7 @@ interface TaskCardProps {
     nextTask?: Task;
     onChangeNextTask?: (taskId: string) => void;
 }
+
 export function TaskCard({
     task,
     onEdit,
@@ -46,21 +47,20 @@ export function TaskCard({
     onCloseSidebar,
     onToggleMyDay,
     onDuplicate,
-}: TaskCardProps & { onDuplicate?: (task: Task) => void }) {
+    nextTask,
+    onChangeNextTask,
+}: TaskCardProps) {
     const router = useRouter();
     const [isHovered, setIsHovered] = useState(false);
     const { refreshJobProgress } = useTaskContext();
     const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
     const justClosedDuplicateRef = useRef(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // Format the date
     const formatDate = (dateString?: string) => {
         if (!dateString) return null;
         
-        // Parse the date and preserve the UTC date
         const date = new Date(dateString);
-        
-        // Use toISOString to get YYYY-MM-DD in UTC, then create a new date with just that part
         const utcDateString = date.toISOString().split('T')[0];
         const displayDate = new Date(utcDateString + 'T00:00:00');
       
@@ -69,15 +69,13 @@ export function TaskCard({
           month: "short",
           day: "numeric",
         });
-      };
+    };
 
-    // Get owner name from owner ID
     const getOwnerName = () => {
         if (!task.owner) return "Not assigned";
         return ownerMap[task.owner] || "Not assigned";
     };
 
-    // Get border color based on next task and completion status
     const getBorderClasses = () => {
         if (task.isNextTask) return "border-l-4 border border-orange-500 bg-white";
         if (task.completed) return "border border-gray-200 bg-gray-50";
@@ -85,21 +83,21 @@ export function TaskCard({
     };
 
     const formatTimestamp = (dateString?: Date | string) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-    });
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        });
     };
 
     const handleTaskComplete = async (value: boolean) => {
         try {
-            // Call the original onComplete handler
-            await onComplete(task.id, task.jobId, value);
+            if (onComplete) {
+                await onComplete(task.id, task.jobId, value);
+            }
             
-            // Then trigger a refresh of the job progress
             refreshJobProgress(task.jobId);
             
             console.log(`Task ${task.id} marked as ${value ? 'completed' : 'incomplete'}`);
@@ -119,17 +117,19 @@ export function TaskCard({
 
     const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        await onDelete(task.id);
+        if (onDelete) {
+            await onDelete(task.id);
+        }
         if (typeof onCloseSidebar === 'function') {
             onCloseSidebar();
         }
     };
 
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const handleNextTaskClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         setSidebarOpen(true);
     };
+
     return (
         <div
             className={`rounded-md ${getBorderClasses()} bg-[#F4F4F4] w-full cursor-pointer hover:shadow-md transition-shadow`}
@@ -147,9 +147,7 @@ export function TaskCard({
                         />
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                        {/* Task title */}
                         <div className="mb-2 sm:mb-4">
                             <h3 className="text-sm sm:text-base font-semibold flex flex-wrap items-center gap-1 sm:gap-2">
                                 <span className="break-words">{task.title}</span>
@@ -172,9 +170,7 @@ export function TaskCard({
                             </h3>
                         </div>
 
-                        {/* Task details */}
                         <div className="flex flex-col sm:flex-row gap-2 sm:gap-10 mb-2">
-                            {/* Owner info */}
                             <div className="flex items-center">
                                 <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center text-xs sm:text-sm font-medium text-gray-600 mr-1 sm:mr-2">
                                     {getOwnerName().charAt(0).toUpperCase()}
@@ -182,7 +178,6 @@ export function TaskCard({
                                 <span className="text-xs sm:text-sm text-gray-600 truncate">{getOwnerName()}</span>
                             </div>
 
-                            {/* Focus and Joy level row */}
                             <div className="flex flex-wrap items-center gap-2 sm:gap-10">
                                 {task.focusLevel && (
                                     <div className="flex items-center">
@@ -195,14 +190,12 @@ export function TaskCard({
                                     </div>
                                 )}
 
-                                {/* Date */}
                                 {task.date && (
                                     <div className="flex items-center">
                                         <span className="text-xs sm:text-sm text-gray-600">Do Date: <span className="text-xs sm:text-sm font-bold">{formatDate(task.date)}</span></span>
                                     </div>
                                 )}
 
-                                {/* Required hours */}
                                 {task.requiredHours !== undefined && (
                                     <div className="flex items-center">
                                         <span className="text-xs sm:text-sm text-gray-600">Hrs Reqd: <span className="text-xs sm:text-sm font-bold">{task.requiredHours} hrs</span></span>
@@ -211,7 +204,6 @@ export function TaskCard({
                             </div>
                         </div>
 
-                        {/* Tags */}
                         {task.tags && task.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2">
                                 {task.tags.map((tag, index) => (
@@ -226,8 +218,6 @@ export function TaskCard({
                             </div>
                         )}
                     </div>
-
-                    {/* Action buttons */}
                     <div className="flex flex-row gap-1 shrink-0">
                         {onToggleMyDay && (
                             <Button
@@ -276,52 +266,47 @@ export function TaskCard({
                         >
                             <PawPrint className="h-3 w-3 sm:h-4 sm:w-4 text-[#F05523] fill-[#F05523]" />
                         </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            title="Duplicate Task"
-                            onClick={e => {
-                                e.stopPropagation();
-                                if (onDuplicate) onDuplicate(task);
-                            }}
-                        >
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            title="Duplicate Task"
-                            onClick={e => {
-                                e.stopPropagation();
-                                if (onDuplicate) onDuplicate(task);
-                            }}
-                        >
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={e => e.stopPropagation()} title="Delete Task">
-                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete the task.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel onClick={e => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                        
+                        {onDuplicate && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 sm:h-8 sm:w-8"
+                                title="Duplicate Task"
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    onDuplicate(task);
+                                }}
+                            >
+                                <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                        )}
+                        
+                        {onDelete && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={e => e.stopPropagation()} title="Delete Task">
+                                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the task.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel onClick={e => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
                     </div>
                 </div>
             </div>
+            
             {/* Sidebar for next task details */}
             {sidebarOpen && (
                 <TaskDetailsSidebar
